@@ -11,13 +11,14 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
 
       - name: Build Docker image
         run: |
+          set -x  # Debugging aktivieren
           docker build -t ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest .
 
       - name: Log in to GitHub Container Registry
@@ -29,7 +30,9 @@ jobs:
 
       - name: Push Docker image to GitHub Container Registry
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
+          set -x  # Debugging aktivieren
+          docker push 
+          ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
 
   deploy:
     runs-on: ubuntu-latest
