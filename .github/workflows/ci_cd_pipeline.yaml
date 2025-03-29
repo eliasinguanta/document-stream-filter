@@ -18,6 +18,7 @@ jobs:
 
       - name: Build Docker image
         run: |
+          set -x  # Debugging aktivieren
           docker build -t ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest .
 
       - name: Log in to GitHub Container Registry
@@ -29,7 +30,9 @@ jobs:
 
       - name: Push Docker image to GitHub Container Registry
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
+          set -x  # Debugging aktivieren
+          docker push 
+          ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
 
   deploy:
     runs-on: ubuntu-latest
