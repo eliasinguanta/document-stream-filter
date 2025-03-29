@@ -1,0 +1,59 @@
+name: CI/CD Pipeline für Docker Image und Deployment auf EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest .
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}  # Dein GitHub-Username
+          password: ${{ secrets.CI_CD_ACCESS_TOKEN }}  # Das GitHub Secret für das Personal Access Token
+
+      - name: Push Docker image to GitHub Container Registry
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Installiere SSH und Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ssh docker-compose
+
+      - name: Dekodiere den EC2 SSH Private Key
+        run: |
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | base64 --decode > ec2_key.pem
+          chmod 600 ec2_key.pem
+
+      - name: Deploy to EC2 instance
+        run: |
+          ssh -i ec2_key.pem ubuntu@16.171.172.65 << 'EOF'
+            sudo docker pull ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
+            sudo docker stop document-stream-filter || true
+            sudo docker rm document-stream-filter || true
+            sudo docker run -d --name document-stream-filter -p 80:3000 ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
+          EOF
