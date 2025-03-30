@@ -52,14 +52,8 @@ jobs:
 
       - name: deploy to EC2 instance
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@51.21.195.248 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@13.48.58.86 << 'EOF'
             echo "${{ secrets.CI_CD_ACCESS_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
-          
-            sudo apt-get update
-            sudo apt-get install -y docker.io
-
-            sudo usermod -aG docker ubuntu
-            newgrp docker
 
             docker pull ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
             docker stop document-stream-filter || true
