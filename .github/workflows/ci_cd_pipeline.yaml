@@ -31,8 +31,7 @@ jobs:
       - name: Push Docker image to GitHub Container Registry
         run: |
           set -x  # Debugging aktivieren
-          docker push 
-          ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
+          docker push ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
 
   deploy:
     runs-on: ubuntu-latest
