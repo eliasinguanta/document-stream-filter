@@ -46,17 +46,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ssh docker-compose
 
-      - name: decode EC2 SSH Private Key
+      - name: Decode EC2 SSH Private Key
         run: |
-          echo "${{secrets.EC2_SSH_PRIVATE_KEY}}" | base64 --decode > ec2_key.pem
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | base64 --decode > ec2_key.pem
           chmod 600 ec2_key.pem
 
-      - name: deploy to EC2 instance
+      - name: Deploy to EC2 instance
         run: |
+          # SSH-Verbindung zur EC2-Instanz aufbauen und Docker-Befehle ausführen
           ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@16.171.172.65 << 'EOF'
             sudo docker pull ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
             sudo docker stop document-stream-filter || true
             sudo docker rm document-stream-filter || true
             sudo docker run -d --name document-stream-filter -p 80:3000 ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
           EOF
+
 
