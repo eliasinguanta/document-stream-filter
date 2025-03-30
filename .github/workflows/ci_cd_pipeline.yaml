@@ -29,8 +29,8 @@ jobs:
 
       - name: push docker image to github container registry
         run: |
-          docker push 
-          ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
+          set -x  # Debugging aktivieren
+          docker push ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -45,22 +45,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ssh docker-compose
 
-      - name: decode EC2 SSH private key
+      - name: decode EC2 SSH Private Key
         run: |
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | base64 --decode > ec2_key.pem
+          echo "${{secrets.EC2_SSH_SECRET_ACCESS_KEY}}" | base64 --decode > ec2_key.pem
           chmod 600 ec2_key.pem
 
       - name: deploy to EC2 instance
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@51.21.195.248 << 'EOF'
-            sudo apt-get update
-            sudo apt-get install -y docker.io
-
-            sudo usermod -aG docker ubuntu
-            newgrp docker
-
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@16.171.172.65 << 'EOF'
+            echo "${{ secrets.CI_CD_ACCESS_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+          
             docker pull ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
             docker stop document-stream-filter || true
             docker rm document-stream-filter || true
             docker run -d --name document-stream-filter -p 80:3000 ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
           EOF
+
