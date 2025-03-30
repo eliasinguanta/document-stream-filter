@@ -54,11 +54,11 @@ jobs:
       - name: deploy to EC2 instance
         run: |
           ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@16.171.172.65 << 'EOF'
-            echo "${{ secrets.CI_CD_ACCESS_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "${{ secrets.CI_CD_ACCESS_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
           
-            sudo docker pull ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
-            sudo docker stop document-stream-filter || true
-            sudo docker rm document-stream-filter || true
-            sudo docker run -d --name document-stream-filter -p 80:3000 ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
+            docker pull ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
+            docker stop document-stream-filter || true
+            docker rm document-stream-filter || true
+            docker run -d --name document-stream-filter -p 80:3000 ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
           EOF
 
