@@ -41,17 +41,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Installiere SSH und Docker Compose
+      - name: install SSH and docker compose
         run: |
           sudo apt-get update
           sudo apt-get install -y ssh docker-compose
 
-      - name: Dekodiere den EC2 SSH Private Key
+      - name: decode EC2 SSH Private Key
         run: |
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | base64 --decode > ec2_key.pem
           chmod 600 ec2_key.pem
 
-      - name: Deploy to EC2 instance
+      - name: generate public key
+        run: |
+          ssh-keygen -y -f ec2_key.pem > ec2_key.pub
+          cat ec2_key.pub
+
+      - name: deploy to EC2 instance
         run: |
           ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@16.171.172.65 << 'EOF'
             sudo docker pull ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
