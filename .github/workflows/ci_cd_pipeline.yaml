@@ -53,9 +53,10 @@ jobs:
 
       - name: Deploy to EC2 instance
         run: |
-          ssh -i ec2_key.pem ubuntu@16.171.172.65 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@16.171.172.65 << 'EOF'
             sudo docker pull ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
             sudo docker stop document-stream-filter || true
             sudo docker rm document-stream-filter || true
             sudo docker run -d --name document-stream-filter -p 80:3000 ghcr.io/${{ github.repository_owner }}/document-stream-filter:latest
           EOF
+
