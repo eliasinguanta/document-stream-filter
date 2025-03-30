@@ -48,7 +48,7 @@ jobs:
 
       - name: Decode EC2 SSH Private Key
         run: |
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | base64 --decode > ec2_key.pem
+          base64 -d < ${{ secrets.EC2_SSH_PRIVATE_KEY }} > ec2_key.pem
           chmod 600 ec2_key.pem
 
       - name: Deploy to EC2 instance
