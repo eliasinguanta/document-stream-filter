@@ -8,6 +8,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install --omit=dev
 RUN npm install vite
+RUN npm install @aws-sdk/client-s3
+
 
 # 4. Kopiere den Rest des Codes
 COPY . .
