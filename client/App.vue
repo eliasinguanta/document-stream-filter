@@ -1,7 +1,6 @@
 <template>
   <div id="app">
-    <h1>Willkommen auf meiner Vue-Webseite!</h1>
-    <p>Dies ist eine minimalistische Seite, die mit Vite und Node.js erstellt wurde.</p>
+    <h1>Document Stream Filter</h1>
   </div>
 </template>
 

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && aws s3 sync dist s3://document-stream-filter-bucket --delete",
     "start": "node server.js"
   },
   "repository": {
@@ -14,10 +14,13 @@
     "url": "git+https://github.com/eliasinguanta/document-stream-filter.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Elias Inguanta",
+  "license": "MIT",
   "homepage": "https://github.com/eliasinguanta/document-stream-filter#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.777.0",
+    "aws-sdk": "^2.1692.0",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2"
   },
   "devDependencies": {
