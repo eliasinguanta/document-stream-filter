@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "*"
-    if: github.ref != 'refs/heads/main'
 
 jobs:
   test-build:
