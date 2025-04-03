@@ -31,7 +31,6 @@ RUN npm install @aws-sdk/client-s3
 RUN npm install multer
 RUN npm install @aws-sdk/client-dynamodb
 RUN npm install @aws-sdk/util-dynamodb
-RUN npm install formidable
 
 
 
