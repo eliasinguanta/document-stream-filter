@@ -24,6 +24,8 @@
     "@aws-sdk/lib-dynamodb": "^3.778.0",
     "@aws-sdk/util-dynamodb": "^3.777.0",
     "aws-sdk": "^2.1692.0",
+    "bootstrap": "^5.3.4",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "formidable": "^3.5.2",
