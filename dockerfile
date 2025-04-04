@@ -19,10 +19,6 @@ ENV AWS_ACCESS_KEY_ID=AKIAVUDEFQ2QWMOBCWXR
 ENV AWS_SECRET_ACCESS_KEY=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
 ENV AWS_REGION=eu-north-1
 
-# Get the public IP address and set it as VITE_API_URL
-RUN PUBLIC_IP=$(curl -s http://checkip.amazonaws.com) && \
-    echo "VITE_API_URL=https://$PUBLIC_IP:3000" > client/.env
-
 # Setze das Arbeitsverzeichnis
 WORKDIR /app
 
