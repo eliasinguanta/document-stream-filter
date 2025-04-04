@@ -44,4 +44,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Startbefehl für den Container
-CMD ["./start_server.sh"]
+CMD ["npm","run","start"]

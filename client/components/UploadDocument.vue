@@ -42,7 +42,6 @@ export default {
   name: "App",
   data() {
     return {
-      api_url: import.meta.env.VITE_API_URL,
       selectedFile: null,
       uploadedDocuments: [],
     };
@@ -70,7 +69,7 @@ export default {
       formData.append("file", this.selectedFile);
 
       try {
-        const response = await fetch(`${this.api_url}/files`, {
+        const response = await fetch("/files", {
           method: "POST",
           body: formData,
         });
@@ -87,16 +86,16 @@ export default {
     },
     async fetchFiles() {
       try {
-        const response = await fetch(`${this.api_url}/files`);
+        const response = await fetch("/files");
         const data = await response.json();
         this.uploadedDocuments = data.files.map((file) => ({ name: file.documentName, size: file.size, }));
       } catch (error) {
-        alert("Error fetching files from "+`${this.api_url}/files`+": " + error.message);
+        alert("Error fetching files from:" + error.message);
       }
     },
     async deleteFile(filename) {
       try {
-        const response = await fetch(`${this.api_url}/files/${filename}`, {
+        const response = await fetch("/files/${filename}", {
           method: "DELETE",
         });
 
@@ -112,7 +111,7 @@ export default {
       }
     },
     async downloadFile(filename) {
-      window.location.href = `${this.api_url}/files/${filename}`;
+      window.location.href = `/files/${filename}`;
     },
   },
 };
