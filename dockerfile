@@ -39,6 +39,8 @@ RUN npm install bootstrap@5.3.4
 # Kopiere den Rest des Codes
 COPY . .
 
+RUN chmod +x start_server.sh
+
 # Baue die Vite-App
 RUN npm run build
 
@@ -46,4 +48,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Startbefehl für den Container
-CMD ["npm", "run", "start"]
+CMD ["./start_server.sh"]
