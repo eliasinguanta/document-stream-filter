@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # get ip
-PUBLIC_IP=$(curl -s http://checkip.amazonaws.com || echo "localhost")
+#PUBLIC_IP=$(curl -s http://checkip.amazonaws.com || echo "localhost")
+PUBLIC_IP=127.0.0.1 #for testing
 
 # make ip available for vite
 touch ./client/.env
