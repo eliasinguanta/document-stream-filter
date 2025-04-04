@@ -91,7 +91,7 @@ export default {
         const data = await response.json();
         this.uploadedDocuments = data.files.map((file) => ({ name: file.documentName, size: file.size, }));
       } catch (error) {
-        alert("Error fetching files: " + error.message);
+        alert("Error fetching files from "+`${this.api_url}/files`+": " + error.message);
       }
     },
     async deleteFile(filename) {
