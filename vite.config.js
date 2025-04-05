@@ -4,16 +4,11 @@ import fs from 'fs';
 
 export default defineConfig({
   plugins: [vue()],
-  root: 'client',  // Setzt den Root-Ordner auf 'client'
+  root: 'client', 
   build: {
-    outDir: '../dist',  // Output-Verzeichnis für gebaute Dateien
-    emptyOutDir: true,  // Löscht vorherige Builds, um alte Dateien zu entfernen
+    outDir: '../dist',  
+    emptyOutDir: true,  
   },
-  base: "./", // Verhindert absolute Pfade in der index.html
-  server: {
-    https: {
-      key: fs.readFileSync('ssl/server.key'),
-      cert: fs.readFileSync('ssl/server.crt'),
-    },
-  }
+  base: "./", 
+
 });
