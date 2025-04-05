@@ -28,6 +28,10 @@ app.get("/files", getDocumentNameAndSize, (req, res) => {
 // get a single file
 app.get("/files/:filename", getDocument);
 
+app.get("/health", (req, res) => {
+  res.sendStatus(200);
+});
+
 // get the website
 app.get("*", getWebsiteFromS3, async (req, res) => {
   res.end();
