@@ -34,7 +34,7 @@ docker pull ghcr.io/\$REPO_OWNER/\$REPO_NAME:latest
 docker stop \$REPO_NAME || true
 docker rm \$REPO_NAME || true
 
-docker run -d --name \$REPO_NAME -p 443:3000 ghcr.io/\$REPO_OWNER/\$REPO_NAME:latest
+docker run -d --name \$REPO_NAME -p 80:3000 ghcr.io/\$REPO_OWNER/\$REPO_NAME:latest
 echo "[\$(date)] Update abgeschlossen!" >> /home/ubuntu/update_container.log
 EOF
 
