@@ -95,7 +95,7 @@ export default {
     },
     async deleteFile(filename) {
       try {
-        const response = await fetch("/files/${filename}", {
+        const response = await fetch(`/files/${filename}`, {
           method: "DELETE",
         });
 
