@@ -1,8 +1,9 @@
 import express from "express";
+import fetch from 'node-fetch';
 
 import {getWebsiteFromS3} from "./backend/s3_api.js";
 import {transfromInput} from "./backend/utils.js";
-import {postDocument, getDocumentNameAndSize, deleteDocument, getDocument, postQueries, getQueries, deleteQueries } from "./backend/dynamoDB_api.js";
+import {postDocument, getDocumentNameAndSize, deleteDocument, getDocument, getDocuments, postQueries, getQueries, deleteQueries } from "./backend/dynamoDB_api.js";
 const app = express();
 const PORT = 3000;
 
@@ -27,7 +28,6 @@ app.post("/files", transfromInput, postDocument, (req, res) => {
 app.get("/files", getDocumentNameAndSize, (req, res) => {
     console.log(res.locals.metadata);
     res.status(200).json({ files: res.locals.metadata });
-  
 });
 
 // get a single file
@@ -49,32 +49,34 @@ app.delete('/queries/:id', deleteQueries, (req, res) => {
   res.sendStatus(200);
 })
 
-app.get('/filter', (req, res) => {
-  res.json({
-    results: [
-      {
-        query: { word: "hallo", metric: "edit", distanz: 2 },
-        results: [
-          { name: "Dokument1.pdf", size: "1.2 MB" },
-          { name: "Dokument4.pdf", size: "450 KB" }
-        ]
+
+app.get('/filter', getDocuments, getQueries, async (req, res) => {
+  const documents = res.locals.documents;
+  const queries = res.locals.queries;
+
+  console.log(documents);
+  console.log(queries);
+
+  try {
+    const response = await fetch('http://127.0.0.1:3002/filter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      {
-        query: { word: "meeting", metric: "edit", distanz: 3 },
-        results: [
-          { name: "Dokument4.pdf", size: "450 KB" }
-        ]
-      },
-      {
-        query: { word: "projekt", metric: "edit", distanz: 1 },
-        results: [
-          { name: "Dokument2.pdf", size: "850 KB" },
-          { name: "Dokument3.pdf", size: "3.1 MB" }
-        ]
-      }
-    ]
-  });
-})
+      body: JSON.stringify({
+        documents: documents,
+        queries: queries,
+      }),
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Fehler bei der HTTP-Anfrage:', error);
+    res.status(500).json({ error: 'Serverfehler' });
+  }
+});
+
 
 
 // get the website

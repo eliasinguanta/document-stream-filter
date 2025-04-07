@@ -72,6 +72,23 @@ export async function getDocumentNameAndSize(req, res, next) {
   }
 }
 
+// Middleware for getting all documents
+export async function getDocuments(req, res, next) {
+  try {
+
+    // Scan table
+    const data = await client.send(new ScanCommand({ TableName: DOCUMENT_TABLE}));
+
+    // Format data for response
+    res.locals.documents = data.Items.map(item => unmarshall(item));
+
+    next();
+  } catch (err) {
+    console.error("Error reading metadata from DynamoDB:", err);
+    res.sendStatus(500);
+  }
+}
+
 // Middleware for deleting a file from DynamoDB
 export async function deleteDocument(req, res, next) {
 

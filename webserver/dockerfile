@@ -31,6 +31,8 @@ RUN npm install multer
 RUN npm install @aws-sdk/client-dynamodb
 RUN npm install @aws-sdk/util-dynamodb
 RUN npm install bootstrap@5.3.4
+RUN npm install node-fetch
+
 
 # Kopiere den Rest des Codes
 COPY . .

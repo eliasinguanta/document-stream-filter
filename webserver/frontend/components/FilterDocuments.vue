@@ -20,11 +20,11 @@
                 <tr v-for="(qr, index) in queryResults" :key="index">
                     <td>{{ qr.query.word }}</td>
                     <td>{{ qr.query.metric }}</td>
-                    <td>{{ qr.query.distanz }}</td>
+                    <td>{{ qr.query.distance }}</td>
                     <td>
                         <ul class="list-group">
-                            <li v-for="(result, index) in qr.results" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ result.name }}
+                            <li v-for="(result) in qr.results" class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ result.documentName }}
                                 <button @click="downloadDocument" class="btn btn-sm btn-success">Download</button>
                             </li>
                         </ul>
@@ -48,7 +48,7 @@ const applyFilters = async () => {
     if (!response.ok) throw new Error(`Serverfehler: ${response.status}`);
     
     const data = await response.json();
-    queryResults.value = data.results;
+    queryResults.value = data;
   } catch (error) {
     console.error("Fehler beim Abrufen der gefilterten Dokumente:", error);
   }

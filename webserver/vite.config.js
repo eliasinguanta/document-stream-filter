@@ -4,7 +4,7 @@ import fs from 'fs';
 
 export default defineConfig({
   plugins: [vue()],
-  root: 'client', 
+  root: 'frontend', 
   build: {
     outDir: '../dist',  
     emptyOutDir: true,  
