@@ -2,7 +2,7 @@ import { DynamoDBClient, PutItemCommand, ScanCommand, DeleteItemCommand, GetItem
 import { unmarshall } from "@aws-sdk/util-dynamodb"
 
 const client = new DynamoDBClient({});
-const TABLE_NAME = 'dsf-metadata-db';
+const DOCUMENT_TABLE = 'dsf-metadata-db';
 
 // Middleware for uploading file to DynamoDB
 export async function postDocument(req, res, next) {
@@ -15,29 +15,38 @@ export async function postDocument(req, res, next) {
 
   try {
 
-    // Falls du den Inhalt der Datei verarbeiten musst, z.B. in Text umwandeln
+    // Read file content
     const fileContent = req.file.buffer.toString("utf-8");
 
-    // transform file to list of words
+    // Transform file to list of words
     const words = fileContent.match(/\b\w+\b/g) || []; // RegEx extrahiert Wörter
 
     // Filter metadata from file
     const fileMetadata = {
-      documentName: { S: req.file.originalname }, // Partition Key
-      size: { N: req.file.size.toString() },      // Document size in bytes
+      documentName: { S: req.file.originalname },
+      size: { N: req.file.size.toString() },
       mimeType: { S: req.file.mimetype },
       uploadDate: { S: new Date().toISOString() },
-      words: { L: words.map(word => ({ S: word })) } // Begrenzung auf 1000 Wörter für DynamoDB-Größe
+      words: { L: words.map(word => ({ S: word })) }
     };
 
-    // Create upload command
-    const command = new PutItemCommand({
-      TableName: TABLE_NAME,
-      Item: fileMetadata,
-    });
 
     // Upload metadata to DynamoDB
-    await client.send(new PutItemCommand({ TableName: TABLE_NAME, Item: fileMetadata }));
+    await client.send(new PutItemCommand({ TableName: DOCUMENT_TABLE, Item: fileMetadata }));
+    const data = await client.send(
+      new ScanCommand({
+        TableName: DOCUMENT_TABLE,
+        ProjectionExpression: "documentName, size",
+        FilterExpression: "documentName = :documentName",
+        ExpressionAttributeValues: {
+          ":documentName": { S: req.file.originalname }
+        }
+      })
+    );
+    
+
+    // transfrom the data to a more readable format
+    res.locals.metadata = data.Items.map(item => unmarshall(item))[0];
 
     next();
   } catch (err) {
@@ -51,7 +60,7 @@ export async function getDocumentNameAndSize(req, res, next) {
   try {
 
     // Scan table
-    const data = await client.send(new ScanCommand({ TableName: TABLE_NAME, ProjectionExpression: "documentName, size" }));
+    const data = await client.send(new ScanCommand({ TableName: DOCUMENT_TABLE, ProjectionExpression: "documentName, size" }));
 
     // Format data for response
     res.locals.metadata = data.Items.map(item => unmarshall(item));
@@ -74,7 +83,7 @@ export async function deleteDocument(req, res, next) {
 
   try {
     // delete metadata from DynamoDB
-    await client.send(new DeleteItemCommand({ TableName: TABLE_NAME, Key: { documentName: { S: req.params.filename } } }));
+    await client.send(new DeleteItemCommand({ TableName: DOCUMENT_TABLE, Key: { documentName: { S: req.params.filename } } }));
 
     next();
   } catch (error) {
@@ -95,7 +104,7 @@ export async function getDocument(req, res) {
   try {
 
     // Get file from DynamoDB
-    const data = await client.send(new GetItemCommand({ TableName: TABLE_NAME, Key: { documentName: { S: req.params.filename } } }));
+    const data = await client.send(new GetItemCommand({ TableName: DOCUMENT_TABLE, Key: { documentName: { S: req.params.filename } } }));
 
     // Check if file exists
     if (!data.Item) {
@@ -114,6 +123,98 @@ export async function getDocument(req, res) {
 
   } catch (err) {
     console.error("Error reading metadata from DynamoDB:", err);
+    return res.sendStatus(500);
+  }
+}
+
+
+const QUERY_TABLE = 'dsf-queries-db';
+
+
+// Every query has a unique id, which is the maximum id + 1
+// To upload a new query, we need to know the maximum id
+async function getMaxQueryId(){
+  // Scan table for all queryIds
+  const data = await client.send( new ScanCommand({ TableName: QUERY_TABLE, ProjectionExpression: "queryId" }));
+
+  // If no items are found we start at id 0
+  if (!data.Items || data.Items.length === 0) return 0
+
+  // If items are found we transfrom the data to a simple array of queryIds
+  const queryIds = data.Items.map(item => unmarshall(item).queryId).map(id => parseInt(id))
+
+  // Get the maximum queryId
+  const maxQueryId = queryIds.reduce((max, current) => { return current > max ? current : max;}, 0);
+  return maxQueryId;
+}
+
+// Next queryId is the maximum queryId + 1
+let nextId = await getMaxQueryId() + 1;
+
+// Middleware for uploading a query to DynamoDB
+// A Query consists of a word, a metric and a distance
+export async function postQueries(req, res, next) {
+
+  // Check if sent query is complete
+  const { word, metric, distance } = req.body
+  if (!word || !metric || distance == null)  return res.sendStatus(400);
+  
+
+  try {
+    // Create query object in database format
+    const query = {
+      queryId: { N: String(nextId++) }, // key
+      word: { S: word }, // query word
+      metric: { S: metric }, // query metric
+      distance: { N: String(distance) }, // query distance
+    };
+
+    // Upload query to DynamoDB
+    await client.send(new PutItemCommand({ TableName: QUERY_TABLE, Item: query }));
+
+    // Store the query also in res.locals for the next middleware
+    res.locals.new_query = unmarshall(query);
+
+    next();
+  } catch (err) {
+    console.error("Error processing query upload:", err);
+    return res.sendStatus(500);
+  }
+}
+
+// Middleware for getting all queries from DynamoDB
+export async function getQueries(req, res, next) {
+  try {
+
+    // Scan entire queries-table
+    const data = await client.send(new ScanCommand({ TableName: QUERY_TABLE }));
+
+    // Format data for response
+    res.locals.queries = data.Items.map(item => unmarshall(item));
+
+    next();
+  } catch (err) {
+    console.error("Error reading queries from DynamoDB:", err);
+    res.sendStatus(500);
+  }
+}
+
+// Middleware for deleting a file from DynamoDB
+export async function deleteQueries(req, res, next) {
+
+  // Check if a filename is provided
+  if (!req.params.id) {
+    console.error("no id given");
+    return res.sendStatus(400);
+  }
+
+  try {
+    // Delete metadata from DynamoDB
+    await client.send(new DeleteItemCommand({ TableName: QUERY_TABLE, Key: { queryId: { N: req.params.id } } }));
+
+    next();
+  } catch (error) {
+    console.error("Error deleting metadata from DynamoDB:", error);
     return res.sendStatus(500);
   }
 }
