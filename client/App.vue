@@ -1,17 +1,25 @@
 <template>
   <div id="app">
-    <h1>Document Stream Filter</h1>
-    <UploadDocument />
+    <h1 class="text-center mb-4">Document Stream Filter</h1>
+    <div class="row justify-content-center">
+      <div class="col-md-5">
+        <UploadDocument />
+      </div>
+      <div class="col-md-5">
+        <UploadQuery />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import UploadDocument from './components/UploadDocument.vue';
-
+import UploadQuery from './components/UploadQuery.vue';
 export default {
   name: 'App',
   components: {
     UploadDocument,
+    UploadQuery,
   },
 };
 </script>

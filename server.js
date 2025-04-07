@@ -2,9 +2,16 @@ import express from "express";
 
 import {getWebsiteFromS3} from "./backend/s3_api.js";
 import {transfromInput} from "./backend/utils.js";
-import {postDocument, getDocumentNameAndSize, deleteDocument, getDocument } from "./backend/dynamoDB_api.js";
+import {postDocument, getDocumentNameAndSize, deleteDocument, getDocument, postQueries, getQueries, deleteQueries } from "./backend/dynamoDB_api.js";
 const app = express();
 const PORT = 3000;
+
+// health check
+// basically a ping to check if the server is running
+// For AWS ELB a health check endpoint is required (but i also just could use the "/" endpoint)
+app.get("/health", (req, res) => {
+  res.sendStatus(200);
+});
 
 // delete a single file and its metadata
 app.delete("/files/:filename", deleteDocument, (req, res) => {
@@ -13,7 +20,7 @@ app.delete("/files/:filename", deleteDocument, (req, res) => {
 
 // upload a file and its metadata
 app.post("/files", transfromInput, postDocument, (req, res) => {
-  res.sendStatus(200);
+  res.status(200).json(res.locals.metadata);
 });
 
 // get a list of all files
@@ -26,14 +33,28 @@ app.get("/files", getDocumentNameAndSize, (req, res) => {
 // get a single file
 app.get("/files/:filename", getDocument);
 
-app.get("/health", (req, res) => {
+// get all queries
+app.get('/queries', getQueries, (req, res) => {
+  res.json(res.locals.queries)
+})
+
+
+// post a single query
+app.post('/queries', express.json(),postQueries, (req, res) => {
+  res.json(res.locals.new_query);
+})
+
+// delete a single query
+app.delete('/queries/:id', deleteQueries, (req, res) => {
   res.sendStatus(200);
-});
+})
+
 
 // get the website
 app.get("*", getWebsiteFromS3, async (req, res) => {
   res.end();
 });
+
 
 //start http server
 app.listen(PORT, () => {
