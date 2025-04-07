@@ -49,6 +49,33 @@ app.delete('/queries/:id', deleteQueries, (req, res) => {
   res.sendStatus(200);
 })
 
+app.get('/filter', (req, res) => {
+  res.json({
+    results: [
+      {
+        query: { word: "hallo", metric: "edit", distanz: 2 },
+        results: [
+          { name: "Dokument1.pdf", size: "1.2 MB" },
+          { name: "Dokument4.pdf", size: "450 KB" }
+        ]
+      },
+      {
+        query: { word: "meeting", metric: "edit", distanz: 3 },
+        results: [
+          { name: "Dokument4.pdf", size: "450 KB" }
+        ]
+      },
+      {
+        query: { word: "projekt", metric: "edit", distanz: 1 },
+        results: [
+          { name: "Dokument2.pdf", size: "850 KB" },
+          { name: "Dokument3.pdf", size: "3.1 MB" }
+        ]
+      }
+    ]
+  });
+})
+
 
 // get the website
 app.get("*", getWebsiteFromS3, async (req, res) => {

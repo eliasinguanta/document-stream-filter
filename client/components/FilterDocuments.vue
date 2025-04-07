@@ -32,48 +32,28 @@
                 </tr>
             </tbody>
         </table>
-
-
     </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 
-// example to see the frontend 
-// TODO: delete
-const queries = ref([
-  { word: 'hallo', metric: 'edit', distanz: 2 },
-  { word: 'meeting', metric: 'exact', distanz: 0 },
-  { word: 'projekt', metric: 'hamming', distanz: 1 },
-]);
-
-// example to see the frontend
-// TODO: delete
-const documents = ref([
-  { name: 'Dokument1.txt', size: '1.2 MB', content: 'Hallo Welt, dies ist ein Beispiel.' },
-  { name: 'Dokument2.txt', size: '850 KB', content: 'Projektbesprechung am Freitag.' },
-  { name: 'Dokument3.txt', size: '3.1 MB', content: 'Wir arbeiten am neuen Projekt.' },
-  { name: 'Dokument4.txt', size: '450 KB', content: 'Hallo zusammen, willkommen im Meeting.' },
-]);
-
 // result list
 const queryResults = ref([]);
 
-// example filter to see the frontend
-// TODO: change to http request to the server
-const applyFilters = () => {
-  const results = [];
-  queries.value.forEach(query => {
-    const filtered = documents.value.filter(doc => {
-      return doc.content.toLowerCase().includes(query.word.toLowerCase());
-    });
-
-    results.push({ query, results: filtered });
-  });
-
-  queryResults.value = results;
+// request to the server to get the filtered documents
+const applyFilters = async () => {
+  try {
+    const response = await fetch('/filter');
+    if (!response.ok) throw new Error(`Serverfehler: ${response.status}`);
+    
+    const data = await response.json();
+    queryResults.value = data.results;
+  } catch (error) {
+    console.error("Fehler beim Abrufen der gefilterten Dokumente:", error);
+  }
 };
+
 
 // TODO: implement as http request to the server
 const downloadDocument = async (documentName) => {
