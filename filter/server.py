@@ -21,6 +21,10 @@ class FilterRequest(BaseModel):
     queries: List[Query]
     documents: List[Document]
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+    
 # Endpoint for filtering documents based on queries
 # TODO: Expand metric to edit and hamming
 @app.post("/filter")
