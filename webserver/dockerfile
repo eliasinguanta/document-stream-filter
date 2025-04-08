@@ -15,8 +15,8 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     && rm -rf awscliv2.zip aws/
 
 # set aws config
-ENV AWS_ACCESS_KEY_ID=AKIAVUDEFQ2QWMOBCWXR
-ENV AWS_SECRET_ACCESS_KEY=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
+ENV AWS_ACCESS_KEY_ID=""
+ENV AWS_SECRET_ACCESS_KEY=""
 ENV AWS_REGION=eu-north-1
 
 # Setze das Arbeitsverzeichnis
