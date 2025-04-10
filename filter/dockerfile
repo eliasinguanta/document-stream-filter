@@ -1,9 +1,17 @@
-FROM python:3.9-slim
+FROM python:3.9
 
 WORKDIR /app
 
+
+# System-Updates und Java + Tools installieren
+RUN apt-get update
+RUN apt-get install -y default-jdk procps
+RUN apt-get clean
+
 RUN pip install fastapi uvicorn
 RUN pip install "fastapi[all]"
+RUN pip install pyspark
+
 
 COPY . .
 

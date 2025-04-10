@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export AWS_ACCESS_KEY_ID="AKIAVUDEFQ2QWMOBCWXR" #TODO: Add AWS access key
-export AWS_SECRET_ACCESS_KEY="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" #TODO: Add AWS secret key
+export AWS_ACCESS_KEY_ID="" #TODO: Add AWS access key
+export AWS_SECRET_ACCESS_KEY="" #TODO: Add AWS secret key
 export AWS_REGION="eu-north-1"
 
 sudo apt-get update

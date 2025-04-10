@@ -6,6 +6,7 @@ import {transfromInput} from "./backend/utils.js";
 import {postDocument, getDocumentNameAndSize, deleteDocument, getDocument, getDocuments, postQueries, getQueries, deleteQueries } from "./backend/dynamoDB_api.js";
 const app = express();
 const PORT = 3000;
+const FILTER_URL = "filter:3002";
 
 // health check
 // basically a ping to check if the server is running
@@ -58,7 +59,7 @@ app.get('/filter', getDocuments, getQueries, async (req, res) => {
   console.log(queries);
 
   try {
-    const response = await fetch('http://127.0.0.1:3002/filter', {
+    const response = await fetch('http://'+FILTER_URL+'/filter', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
