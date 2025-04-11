@@ -43,5 +43,5 @@ jobs:
 
       - name: Rollout restart in Kubernetes
         run: |
-          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name YOUR_EKS_CLUSTER_NAME
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name dsf-filter
           kubectl rollout restart deployment dsf-filter -n document-stream-filter
