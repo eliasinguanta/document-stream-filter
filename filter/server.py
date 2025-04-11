@@ -1,26 +1,12 @@
-from fastapi import FastAPI
+from flask import Flask, request, jsonify
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, lower, explode
 from pydantic import BaseModel
 from typing import List
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lower, explode, array_contains
 
-app = FastAPI()
+app = Flask(__name__)
 
-from pyspark.sql import SparkSession
-
-spark = SparkSession.builder \
-    .appName("document-stream-filter") \
-    .master("k8s://https://F9803F8F3EE6F9E63903294AC34C965F.gr7.eu-north-1.eks.amazonaws.com") \
-    .config("spark.kubernetes.container.image", "386757133985.dkr.ecr.eu-north-1.amazonaws.com/dsf-filter:latest") \
-    .config("spark.kubernetes.namespace", "document-stream-filter") \
-    .config("spark.executor.instances", "10") \
-    .config("spark.kubernetes.authenticate.driver.serviceAccountName", "spark") \
-    .config("spark.executor.memory", "2g") \
-    .config("spark.driver.memory", "1g") \
-    .getOrCreate()
-
-
-# Spark Session init
+# Initialize Spark session
 spark = SparkSession.builder \
     .appName("document-stream-filter") \
     .getOrCreate()
@@ -42,36 +28,59 @@ class FilterRequest(BaseModel):
     queries: List[Query]
     documents: List[Document]
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
-
-@app.post("/filter")
-def filter_docs(data: FilterRequest):
-    # Create a Spark DataFrame from the documents
-    docs_rdd = spark.sparkContext.parallelize([doc.dict() for doc in data.documents])
-    docs_df = spark.read.json(docs_rdd)
-
-    # Lowercase all words
-    docs_df = docs_df.withColumn("words", 
-        explode("words")) \
-        .withColumn("words", lower(col("words")))
-
-    results = []
-
-    for query in data.queries:
-        # filter documents that contain the word
-        filtered = docs_df.filter(col("words") == query.word.lower())
+@app.route("/filter", methods=["POST"])
+def filter_docs():
+    try:
+        # Read json data from the request
+        data = request.get_json()
         
-        # group by document
-        docs_filtered = filtered.groupBy("documentName", "size", "mimeType", "uploadDate") \
-                                .count() \
-                                .drop("count")
+        # Logging
+        print("Received data:", data)
 
-        result_docs = docs_filtered.collect()
-        results.append({
-            "query": query.dict(),
-            "results": [row.asDict() for row in result_docs]
-        })
+        # validate request
+        filter_request = FilterRequest(**data)
+        
+        # create spark data frame
+        docs_rdd = spark.sparkContext.parallelize([doc.dict() for doc in filter_request.documents])
+        docs_df = spark.read.json(docs_rdd)
 
-    return results
+
+        # apply lower case to all words
+        docs_df = docs_df.withColumn("words", 
+            explode("words")) \
+            .withColumn("words", lower(col("words")))
+
+        results = []
+
+        for query in filter_request.queries:
+            
+            # exact matching
+            filtered = docs_df.filter(col("words") == query.word.lower())
+            
+            # collect and transform results
+            docs_filtered = filtered.groupBy("documentName", "size", "mimeType", "uploadDate") \
+                                    .count() \
+                                    .drop("count")
+            result_docs = docs_filtered.collect()
+            
+            results.append({
+                "query": query.dict(),
+                "results": [row.asDict() for row in result_docs]
+            })
+
+        return jsonify(results)
+    
+    except Exception as e:
+        # Logging
+        print("Error occurred:", str(e))
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    return jsonify({"status": "ok"})
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=3002)

@@ -6,7 +6,7 @@ import {transfromInput} from "./backend/utils.js";
 import {postDocument, getDocumentNameAndSize, deleteDocument, getDocument, getDocuments, postQueries, getQueries, deleteQueries } from "./backend/dynamoDB_api.js";
 const app = express();
 const PORT = 3000;
-const FILTER_URL = "filter:3002";
+const FILTER_URL = "a06d53fda98cc45b68ee43b43e8fc0ca-138658565.eu-north-1.elb.amazonaws.com";
 
 // health check
 // basically a ping to check if the server is running
