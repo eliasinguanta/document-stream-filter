@@ -3,3 +3,5 @@ aws ecr get-login-password --region eu-north-1 | docker login --username AWS --p
 docker build -t dsf-filter .
 docker tag dsf-filter 386757133985.dkr.ecr.eu-north-1.amazonaws.com/dsf-filter:latest
 docker push 386757133985.dkr.ecr.eu-north-1.amazonaws.com/dsf-filter:latest
+
+

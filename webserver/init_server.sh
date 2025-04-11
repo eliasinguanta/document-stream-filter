@@ -43,3 +43,5 @@ chmod +x /home/ubuntu/update_container.sh
 (crontab -l 2>/dev/null; echo "*/1 * * * * /home/ubuntu/update_container.sh >> /home/ubuntu/update_container.log 2>&1") | crontab -
 
 
+
+
