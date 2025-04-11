@@ -57,7 +57,7 @@ def filter_docs():
             # exact matching
             filtered = docs_df.filter(col("words") == query.word.lower())
             
-            # collect & transform results
+            # collect and transform results 
             docs_filtered = filtered.groupBy("documentName", "size", "mimeType", "uploadDate") \
                                     .count() \
                                     .drop("count")
