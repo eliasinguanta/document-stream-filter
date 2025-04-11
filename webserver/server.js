@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 
 import {getWebsiteFromS3} from "./backend/s3_api.js";
 import {transfromInput} from "./backend/utils.js";
-import {postDocument, getDocumentNameAndSize, deleteDocument, getDocument, getDocuments, postQueries, getQueries, deleteQueries } from "./backend/dynamoDB_api.js";
+import {postDocument, getDocumentNameAndSize, deleteDocument, getDocument, getDocuments, postQueries, getQueries, deleteQueries, postRandomDocuments, deleteAllDocuments } from "./backend/dynamoDB_api.js";
 const app = express();
 const PORT = 3000;
 const FILTER_URL = "a06d53fda98cc45b68ee43b43e8fc0ca-138658565.eu-north-1.elb.amazonaws.com";
@@ -20,9 +20,19 @@ app.delete("/files/:filename", deleteDocument, (req, res) => {
   res.sendStatus(200);
 });
 
+// delete all files
+app.delete("/files", deleteAllDocuments, (req, res) => {
+  res.sendStatus(200);
+});
+
 // upload a file and its metadata
 app.post("/files", transfromInput, postDocument, (req, res) => {
   res.status(200).json(res.locals.metadata);
+});
+
+// uploads multiple random files
+app.post("/randomFiles", postRandomDocuments, (req, res) => {
+  res.status(200).json(res.locals.generatedDocuments);
 });
 
 // get a list of all files

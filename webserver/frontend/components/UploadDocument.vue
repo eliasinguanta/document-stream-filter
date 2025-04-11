@@ -32,7 +32,13 @@
     </div>
 
     <!-- Button to upload the document -->
-    <button class="btn btn-primary" @click="uploadDocument">Upload Document</button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-success" @click="uploadDocument">Upload document</button>
+
+      <button class="btn btn-secondary" @click="uploadRandomDocuments">Upload 200 random documents</button>
+
+      <button class="btn btn-danger" @click="deleteAllFiles">Delete All</button>
+    </div>
 
   </div>
 </template>
@@ -47,6 +53,29 @@ const setUploadDocument = (event) => {
   selectedFile.value = event.target.files[0];
 };
 
+const uploadRandomDocuments = async () => {
+  try {
+    const response = await fetch("/randomFiles", {
+      method: "POST",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      uploadedDocuments.value.push(
+        ...data.map(doc => ({
+          name: doc.documentName,
+          size: doc.size,
+        }))
+      );
+
+    } else {
+      alert("Upload failed: " + response.status);
+    }
+  } catch (error) {
+    alert("An error occurred while uploading the file: " + error.message);
+  }
+}
 // Funktion zum Hochladen des Dokuments
 const uploadDocument = async () => {
 
@@ -119,6 +148,21 @@ const deleteFile = async (filename) => {
   } catch (error) {
     console.error("Error deleting file:", error);
     alert("An error occurred while deleting the file.");
+  }
+};
+
+const deleteAllFiles = async () => {
+  try {
+    if (!confirm('Are you sure you want to delete all documents?')) return;
+
+    const response = await fetch("/files", {
+      method: "DELETE",
+    });
+
+    if (response.ok) uploadedDocuments.value = [];
+
+  } catch (error) {
+    console.error('Error deleting all documents:', error);
   }
 };
 
