@@ -3,7 +3,7 @@ name: CI/CD pipeline for docker image build
 on:
   push:
     branches:
-      - add-exact-filter
+      - main
     paths:
       - 'webserver/**'
 
