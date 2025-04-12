@@ -205,6 +205,9 @@ export async function postRandomDocuments(req, res, next) {
 
   // In Batches von 25 teilen
   const batchSize = 25;
+  const batchPromises = [];  // Hier werden die Promises gesammelt
+
+  // Batches erstellen und asynchron hochladen
   for (let i = 0; i < documents.length; i += batchSize) {
     const batch = documents.slice(i, i + batchSize);
 
@@ -215,28 +218,37 @@ export async function postRandomDocuments(req, res, next) {
       },
     }));
 
-    try {
-      await client.send(
-        new BatchWriteItemCommand({
-          RequestItems: requestItems,
-        })
-      );
-
+    // Für jedes Batch ein Promise erstellen
+    const batchPromise = client.send(
+      new BatchWriteItemCommand({
+        RequestItems: requestItems,
+      })
+    ).then(() => {
+      // Erfolgreich hochgeladene Dokumente hinzufügen
       uploadedDocs.push(
         ...batch.map((doc) => ({
           documentName: doc.documentName.S,
           size: doc.size.N,
         }))
       );
-
-
-    } catch (err) {
+    }).catch((err) => {
       console.error("Error uploading batch:", err);
-      return res.status(500).json({ error: "Error uploading documents in batch" });
-    }
+      throw new Error("Error uploading documents in batch");
+    });
+
+    // Das Promise in das Array aufnehmen
+    batchPromises.push(batchPromise);
   }
-  res.locals.generatedDocuments = uploadedDocs;
-  next();
+
+  try {
+    // Warten, bis alle Batches hochgeladen sind
+    await Promise.all(batchPromises);
+    res.locals.generatedDocuments = uploadedDocs;
+    next();
+  } catch (err) {
+    console.error("Error uploading documents:", err);
+    return res.status(500).json({ error: "Error uploading documents in batch" });
+  }
 }
 
 
