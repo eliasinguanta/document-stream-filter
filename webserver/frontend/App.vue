@@ -9,17 +9,24 @@
         <UploadQuery />
       </div>
     </div>
+    <div class="row justify-content-center mt-4">
+      <div class="col-md-10">
+        <FilterDocuments />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import UploadDocument from './components/UploadDocument.vue';
 import UploadQuery from './components/UploadQuery.vue';
+import FilterDocuments from './components/FilterDocuments.vue';
 export default {
   name: 'App',
   components: {
     UploadDocument,
     UploadQuery,
+    FilterDocuments,
   },
 };
 </script>

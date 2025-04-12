@@ -2,3 +2,5 @@ node_modules/
 .env
 dist/
 update_container.sh
+venv/
+__pycache__/

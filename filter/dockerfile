@@ -1,0 +1,20 @@
+FROM python:3.9
+
+WORKDIR /app
+
+# Installiere Abhängigkeiten
+RUN apt-get update
+RUN apt-get install -y default-jdk procps
+RUN apt-get clean
+
+# Installiere Python-Pakete
+RUN pip install flask pyspark pydantic
+
+# Kopiere alle Dateien ins Containerverzeichnis
+COPY . .
+
+# Stelle sicher, dass der Server auf Port 5000 läuft
+EXPOSE 3002
+
+# Starte den Flask-Server
+CMD ["python", "server.py"]

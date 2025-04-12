@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export AWS_ACCESS_KEY_ID="AKIAVUDEFQ2QWMOBCWXR" #TODO: Add AWS access key
-export AWS_SECRET_ACCESS_KEY="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" #TODO: Add AWS secret key
+export AWS_ACCESS_KEY_ID="" #TODO: Add AWS access key
+export AWS_SECRET_ACCESS_KEY="" #TODO: Add AWS secret key
 export AWS_REGION="eu-north-1"
 
 sudo apt-get update
@@ -41,5 +41,7 @@ EOF
 chmod +x /home/ubuntu/update_container.sh
 
 (crontab -l 2>/dev/null; echo "*/1 * * * * /home/ubuntu/update_container.sh >> /home/ubuntu/update_container.log 2>&1") | crontab -
+
+
 
 

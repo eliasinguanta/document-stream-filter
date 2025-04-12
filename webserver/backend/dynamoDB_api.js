@@ -1,4 +1,4 @@
-import { DynamoDBClient, PutItemCommand, ScanCommand, DeleteItemCommand, GetItemCommand } from '@aws-sdk/client-dynamodb'; // Importieren des DynamoDB Clients und der PutItemCommand
+import { DynamoDBClient, PutItemCommand, ScanCommand, DeleteItemCommand, GetItemCommand, BatchWriteItemCommand } from '@aws-sdk/client-dynamodb'; // Importieren des DynamoDB Clients und der PutItemCommand
 import { unmarshall } from "@aws-sdk/util-dynamodb"
 
 const client = new DynamoDBClient({});
@@ -72,6 +72,23 @@ export async function getDocumentNameAndSize(req, res, next) {
   }
 }
 
+// Middleware for getting all documents
+export async function getDocuments(req, res, next) {
+  try {
+
+    // Scan table
+    const data = await client.send(new ScanCommand({ TableName: DOCUMENT_TABLE}));
+
+    // Format data for response
+    res.locals.documents = data.Items.map(item => unmarshall(item));
+
+    next();
+  } catch (err) {
+    console.error("Error reading metadata from DynamoDB:", err);
+    res.sendStatus(500);
+  }
+}
+
 // Middleware for deleting a file from DynamoDB
 export async function deleteDocument(req, res, next) {
 
@@ -89,6 +106,43 @@ export async function deleteDocument(req, res, next) {
   } catch (error) {
     console.error("Error deleting metadata from DynamoDB:", error);
     return res.sendStatus(500);
+  }
+}
+
+export async function deleteAllDocuments(req, res, next) {
+  try {
+    const data = await client.send(new ScanCommand({ TableName: DOCUMENT_TABLE }));
+
+    if (!data.Items || data.Items.length === 0) {
+      return res.status(200).json({ message: "No documents to delete." });
+    }
+
+    const items = data.Items;
+    const batchSize = 25;
+
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+
+      const requestItems = {};
+      requestItems[DOCUMENT_TABLE] = batch.map((item) => ({
+        DeleteRequest: {
+          Key: {
+            documentName: item.documentName,
+          },
+        },
+      }));
+
+      await client.send(
+        new BatchWriteItemCommand({
+          RequestItems: requestItems,
+        })
+      );
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error while deleting all documents:", error);
+    res.sendStatus(500);
   }
 }
 
@@ -126,6 +180,77 @@ export async function getDocument(req, res) {
     return res.sendStatus(500);
   }
 }
+
+function generateRandomDocument(index) {
+  const randomWords = Array.from({ length: 100 }, () =>
+    Math.random().toString(36).substring(2, 8)
+  );
+
+  const documentName = `random-doc-${index}-${Date.now()}.txt`;
+
+  return {
+    documentName: { S: documentName },
+    size: { N: (randomWords.join(" ").length).toString() },
+    mimeType: { S: "text/plain" },
+    uploadDate: { S: new Date().toISOString() },
+    words: { L: randomWords.map((word) => ({ S: word })) },
+  };
+}
+
+export async function postRandomDocuments(req, res, next) {
+  const n = parseInt(req.query.count) || 200;
+  const uploadedDocs = [];
+
+  const documents = Array.from({ length: n }, (_, i) => generateRandomDocument(i));
+
+  // In Batches von 25 teilen
+  const batchSize = 25;
+  const batchPromises = [];  // Hier werden die Promises gesammelt
+
+  // Batches erstellen und asynchron hochladen
+  for (let i = 0; i < documents.length; i += batchSize) {
+    const batch = documents.slice(i, i + batchSize);
+
+    const requestItems = {};
+    requestItems[DOCUMENT_TABLE] = batch.map((doc) => ({
+      PutRequest: {
+        Item: doc,
+      },
+    }));
+
+    // Für jedes Batch ein Promise erstellen
+    const batchPromise = client.send(
+      new BatchWriteItemCommand({
+        RequestItems: requestItems,
+      })
+    ).then(() => {
+      // Erfolgreich hochgeladene Dokumente hinzufügen
+      uploadedDocs.push(
+        ...batch.map((doc) => ({
+          documentName: doc.documentName.S,
+          size: doc.size.N,
+        }))
+      );
+    }).catch((err) => {
+      console.error("Error uploading batch:", err);
+      throw new Error("Error uploading documents in batch");
+    });
+
+    // Das Promise in das Array aufnehmen
+    batchPromises.push(batchPromise);
+  }
+
+  try {
+    // Warten, bis alle Batches hochgeladen sind
+    await Promise.all(batchPromises);
+    res.locals.generatedDocuments = uploadedDocs;
+    next();
+  } catch (err) {
+    console.error("Error uploading documents:", err);
+    return res.status(500).json({ error: "Error uploading documents in batch" });
+  }
+}
+
 
 
 const QUERY_TABLE = 'dsf-queries-db';
