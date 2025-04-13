@@ -7,22 +7,10 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 
 
-from dynamo_api import post_document_to_dynamoDB, get_documents_from_dynamoDB, delete_document_from_dynamoDB, delete_all_documents_from_dynamoDB, get_document_from_dynamoDB, post_random_documents_to_dynamoDB
+from dynamo_api import post_document_to_dynamoDB, get_documents_from_dynamoDB, delete_document_from_dynamoDB, delete_all_documents_from_dynamoDB, get_document_from_dynamoDB, post_random_documents_to_dynamoDB, filter_documents
 
 
 app = Flask(__name__)
-
-# Initialize Spark session
-spark = SparkSession.builder \
-    .appName("document-stream-filter") \
-    .getOrCreate()
-
-class Document(BaseModel):
-    documentName: str
-    size: int
-    mimeType: str
-    uploadDate: str
-    words: List[str]
 
 class Query(BaseModel):
     queryId: int
@@ -37,42 +25,10 @@ class FilterRequest(BaseModel):
 def filter_docs():
     try:
         data = request.get_json()
-        print("Received queries:", data)
-
         filter_request = FilterRequest(**data)
-
-        # Dokumente laden – Liste von dicts
-        documents = get_documents_from_dynamoDB()
-
-        # Direkt Spark DataFrame erstellen
-        docs_df = spark.createDataFrame(documents)
-
-        # Prüfen ob "words" existiert, sonst vorher filtern
-        if "words" not in docs_df.columns:
-            print("Spalte 'words' existiert nicht im DataFrame.")
-            return make_response("Invalid data format", 400)
-
-        # Worte aufsplitten und klein schreiben
-        docs_df = docs_df.withColumn("words", explode(col("words"))) \
-                         .withColumn("words", lower(col("words")))
-
-        results = []
-
-        for query in filter_request.queries:
-            filtered = docs_df.filter(col("words") == query.word.lower())
-
-            docs_filtered = filtered.groupBy("documentName", "size", "mimeType", "uploadDate") \
-                                    .count() \
-                                    .drop("count")
-
-            result_docs = docs_filtered.collect()
-
-            results.append({
-                "query": query.dict(),
-                "results": [row.asDict() for row in result_docs]
-            })
-
-        return jsonify(results)
+        filtered_documents = filter_documents(filter_request.queries)
+        
+        return jsonify(filtered_documents)
 
     except (BotoCoreError, ClientError, Exception) as e:
         print("Error occurred:", str(e))

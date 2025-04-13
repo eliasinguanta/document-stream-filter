@@ -12,12 +12,20 @@ import time
 import asyncio
 from botocore.exceptions import BotoCoreError, ClientError
 from boto3.dynamodb.conditions import Key
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, lower, explode
+from pydantic import BaseModel
 
 
 # DynamoDB Client
 dynamodb = boto3.client('dynamodb')
 DOCUMENT_TABLE = 'dsf-metadata-db'  # Ersetze mit dem tatsächlichen Tabellennamen
 MAX_BATCH_SIZE = 25
+
+# Initialize Spark session
+spark = SparkSession.builder \
+    .appName("document-stream-filter") \
+    .getOrCreate()
 
 deserializer = TypeDeserializer()
 
@@ -162,3 +170,38 @@ def post_random_documents_to_dynamoDB(count=200):
     except (BotoCoreError, ClientError, Exception) as e:
         print("Error uploading documents:", e)
         return e
+    
+def filter_documents(queries):
+    try:
+
+        # Dokumente laden – Liste von dicts
+        documents = get_documents_from_dynamoDB()
+
+        # Direkt Spark DataFrame erstellen
+        docs_df = spark.createDataFrame(documents)
+
+        # Worte aufsplitten und klein schreiben
+        docs_df = docs_df.withColumn("words", explode(col("words"))) \
+                         .withColumn("words", lower(col("words")))
+
+        results = []
+
+        for query in queries:
+            filtered = docs_df.filter(col("words") == query.word.lower())
+
+            docs_filtered = filtered.groupBy("documentName", "size", "mimeType", "uploadDate") \
+                                    .count() \
+                                    .drop("count")
+
+            result_docs = docs_filtered.collect()
+
+            results.append({
+                "query": query.dict(),
+                "results": [row.asDict() for row in result_docs]
+            })
+
+        return results
+
+    except (BotoCoreError, ClientError, Exception) as e:
+        print("Error occurred:", str(e))
+        raise e
