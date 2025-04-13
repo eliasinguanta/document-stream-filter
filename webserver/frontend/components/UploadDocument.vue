@@ -87,9 +87,9 @@ const uploadRandomDocuments = async () => {
 
     if (response.ok) {
       const data = await response.json();
-
+      
       uploadedDocuments.value.push(
-        ...data.map(doc => ({
+        ...data[0].map(doc => ({
           name: doc.documentName,
           size: doc.size,
         }))
@@ -129,7 +129,6 @@ const uploadDocument = async () => {
     if (response.ok) {
       const data = await response.json();
 
-
       uploadedDocuments.value.push({
         name: data.documentName,
         size: data.size,
@@ -152,7 +151,7 @@ const fetchFiles = async () => {
   try {
     const response = await fetch("/files");
     const data = await response.json();
-    uploadedDocuments.value = data.files.map((file) => ({
+    uploadedDocuments.value = data.map((file) => ({
       name: file.documentName,
       size: file.size,
     }));

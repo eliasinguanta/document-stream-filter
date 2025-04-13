@@ -9,6 +9,8 @@ RUN apt-get clean
 
 # Installiere Python-Pakete
 RUN pip install flask pyspark pydantic
+RUN pip install boto3
+
 
 # Kopiere alle Dateien ins Containerverzeichnis
 COPY . .

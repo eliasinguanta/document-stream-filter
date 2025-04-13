@@ -1,8 +1,14 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lower, explode
 from pydantic import BaseModel
 from typing import List
+from botocore.exceptions import BotoCoreError, ClientError
+
+
+
+from dynamo_api import post_document_to_dynamoDB, get_documents_from_dynamoDB, delete_document_from_dynamoDB, delete_all_documents_from_dynamoDB, get_document_from_dynamoDB, post_random_documents_to_dynamoDB
+
 
 app = Flask(__name__)
 
@@ -26,57 +32,143 @@ class Query(BaseModel):
 
 class FilterRequest(BaseModel):
     queries: List[Query]
-    documents: List[Document]
 
 @app.route("/filter", methods=["POST"])
 def filter_docs():
     try:
-        # Read json data from the request
         data = request.get_json()
-        
-        # Logging
-        print("Received data:", data)
+        print("Received queries:", data)
 
-        # validate request
         filter_request = FilterRequest(**data)
-        
-        # create spark data frame
-        docs_rdd = spark.sparkContext.parallelize([doc.dict() for doc in filter_request.documents])
-        docs_df = spark.read.json(docs_rdd)
 
+        # Dokumente laden – Liste von dicts
+        documents = get_documents_from_dynamoDB()
 
-        # apply lower case to all words
-        docs_df = docs_df.withColumn("words", 
-            explode("words")) \
-            .withColumn("words", lower(col("words")))
+        # Direkt Spark DataFrame erstellen
+        docs_df = spark.createDataFrame(documents)
+
+        # Prüfen ob "words" existiert, sonst vorher filtern
+        if "words" not in docs_df.columns:
+            print("Spalte 'words' existiert nicht im DataFrame.")
+            return make_response("Invalid data format", 400)
+
+        # Worte aufsplitten und klein schreiben
+        docs_df = docs_df.withColumn("words", explode(col("words"))) \
+                         .withColumn("words", lower(col("words")))
 
         results = []
 
         for query in filter_request.queries:
-            
-            # exact matching
             filtered = docs_df.filter(col("words") == query.word.lower())
-            
-            # collect and transform results 
+
             docs_filtered = filtered.groupBy("documentName", "size", "mimeType", "uploadDate") \
                                     .count() \
                                     .drop("count")
+
             result_docs = docs_filtered.collect()
-            
+
             results.append({
                 "query": query.dict(),
                 "results": [row.asDict() for row in result_docs]
             })
 
         return jsonify(results)
-    
-    except Exception as e:
-        # Logging
+
+    except (BotoCoreError, ClientError, Exception) as e:
         print("Error occurred:", str(e))
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+        return make_response('', 500)
+
+# Upload a document to DynamoDB
+# The newly created document object is returned
+@app.route('/files/', methods=['POST'])
+def post_document():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+    
+    file = request.files['file']
+    
+    try:
+        doc = post_document_to_dynamoDB(file)
+        return jsonify(doc)
+    
+    except (BotoCoreError, ClientError, Exception) as e:
+        print(f"Error: {e}")
+        return make_response('', 500)
+
+# Get all documents from DynamoDB
+# Returns a list of dictionaries with the metadata and words of the documents
+@app.route('/files/', methods=['GET'])
+def get_documents():
+    try:
+        return jsonify(get_documents_from_dynamoDB()), 200
+
+    except (BotoCoreError, ClientError, Exception) as e:
+        print("Error reading metadata from DynamoDB:", e)
+        return make_response('', 500)
+
+# Delete a document from DynamoDB
+# The document is deleted by its name
+@app.route('/files/<filename>', methods=['DELETE'])
+def delete_document(filename):
+    if not filename:
+        print("No filename given")
+        return jsonify({"error": "No filename provided"}), 400
+
+    try:
+        delete_document_from_dynamoDB(filename)
+        return make_response('', 200)
+
+    except (BotoCoreError, ClientError, Exception) as e:
+        print("Error deleting metadata from DynamoDB:", e)
+        return make_response('', 500)
+
+# Delete all documents from DynamoDB
+# Only status code is returned
+@app.route('/files/', methods=['DELETE'])
+def delete_all_document():
+    try:
+        delete_all_documents_from_dynamoDB()
+        return make_response('', 200)
+
+    except (BotoCoreError, ClientError, Exception) as e:
+        print("Error deleting all documents from DynamoDB:", e)
+        return make_response('', 500)
+
+# Get a single document from DynamoDB
+@app.route('/files/<filename>', methods=['GET'])
+def get_document(filename):
+    if not filename:
+        print("No documentName provided")
+        return make_response('', 200)
+
+    try:
+
+        file = get_document_from_dynamoDB(filename)
+        response = make_response(file, 200)
+        response.headers["Content-Disposition"] = f'attachment; filename="{filename}.txt"'
+        response.headers["Content-Type"] = "text/plain"
+        return response
+
+    except (BotoCoreError, ClientError, Exception) as e:
+        print("Error reading metadata from DynamoDB:", e)
+        return make_response('', 500)
+
+# Uplload multiple random generated documents to DynamoDB
+# The documents are generated on server-side
+# The newly created document objects are returned
+@app.route("/randomFiles", methods=["POST"])
+def post_random_documents():
+    try:
+        uploaded_docs = post_random_documents_to_dynamoDB(200)
+        return jsonify(uploaded_docs, 200)
+
+    except (BotoCoreError, ClientError, Exception) as e:
+        print("Error uploading documents:", e)
+        return make_response('', 500)
 
 
-
+# Health check endpoint
+# Dummy function
 @app.route("/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "ok"})
