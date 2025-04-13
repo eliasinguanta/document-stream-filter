@@ -4,11 +4,7 @@ from pyspark.sql.functions import col, lower, explode
 from pydantic import BaseModel
 from typing import List
 from botocore.exceptions import BotoCoreError, ClientError
-
-
-
 from dynamo_api import post_document_to_dynamoDB, get_documents_from_dynamoDB, delete_document_from_dynamoDB, delete_all_documents_from_dynamoDB, get_document_from_dynamoDB, post_random_documents_to_dynamoDB, filter_documents
-
 
 app = Flask(__name__)
 

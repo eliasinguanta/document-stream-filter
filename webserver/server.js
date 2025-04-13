@@ -22,7 +22,6 @@ const proxy_for_files = createProxyMiddleware({
 // Forward requests to the spark cluster that is our dynamoDB api
 app.use("/files", proxy_for_files);
 
-
 // Create a proxy for endpoint /files
 const proxy_for_random_files = createProxyMiddleware({
   target: `http://${FORWARD_URL}`,
