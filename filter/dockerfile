@@ -1,22 +1,31 @@
 FROM python:3.9
 
+# Setze das Arbeitsverzeichnis
 WORKDIR /app
 
-# Installiere Abhängigkeiten
-RUN apt-get update
-RUN apt-get install -y default-jdk procps
-RUN apt-get clean
+# Installiere System-Dependencies (inkl. JDK)
+RUN apt-get update && apt-get install -y \
+    default-jdk \
+    curl \
+    unzip \
+    procps \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Installiere Python-Pakete
-RUN pip install flask pyspark pydantic
-RUN pip install boto3
+# AWS-Umgebungsvariablen (Achtung: für dev okay, aber nie Keys hardcoden!)
+ENV AWS_ACCESS_KEY_ID="AKIAVUDEFQ2QWMOBCWXR"
+ENV AWS_SECRET_ACCESS_KEY="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"
+ENV AWS_DEFAULT_REGION=eu-north-1
 
+# Python-Dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Kopiere alle Dateien ins Containerverzeichnis
+# Kopiere deinen Code ins Image
 COPY . .
 
-# Stelle sicher, dass der Server auf Port 5000 läuft
+# Flask-Port freigeben
 EXPOSE 3002
 
-# Starte den Flask-Server
+# Startbefehl
 CMD ["python", "server.py"]

@@ -1,14 +1,15 @@
 version: '3.8'
 
 services:
-  webserver:
-    build:
-      context: ./webserver
-    ports:
-      - "3000:3000"
 
   filter:
     build:
       context: ./filter 
     ports:
       - "3002:3002"
+
+  webserver:
+    build:
+      context: ./webserver
+    ports:
+      - "3000:3000"
