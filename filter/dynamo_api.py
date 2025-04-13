@@ -174,30 +174,28 @@ def post_random_documents_to_dynamoDB(count=200):
 def filter_documents(queries):
     try:
 
-        # Dokumente laden – Liste von dicts
+        # Get all documents from DynamoDB
         documents = get_documents_from_dynamoDB()
 
-        # Direkt Spark DataFrame erstellen
+        # Create a Spark DataFrame from the documents
         docs_df = spark.createDataFrame(documents)
 
-        # Worte aufsplitten und klein schreiben
+        # Split the words into separate rows and convert to lowercase
         docs_df = docs_df.withColumn("words", explode(col("words"))) \
                          .withColumn("words", lower(col("words")))
 
         results = []
 
         for query in queries:
+            
+            # Actual filtering
             filtered = docs_df.filter(col("words") == query.word.lower())
-
-            docs_filtered = filtered.groupBy("documentName", "size", "mimeType", "uploadDate") \
-                                    .count() \
-                                    .drop("count")
-
-            result_docs = docs_filtered.collect()
-
+            
+            
+            filtered_documents = filtered.groupBy("documentName", "size", "mimeType", "uploadDate").collect()
             results.append({
                 "query": query.dict(),
-                "results": [row.asDict() for row in result_docs]
+                "results": [row.asDict() for row in filtered_documents]
             })
 
         return results

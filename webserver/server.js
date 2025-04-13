@@ -2,14 +2,12 @@ import express from "express";
 import fetch from 'node-fetch';
 
 import {getWebsiteFromS3} from "./backend/s3_api.js";
-import {transfromInput} from "./backend/utils.js";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
 import {postQueries, getQueries, deleteQueries } from "./backend/dynamoDB_api.js";
 const app = express();
 const PORT = 3000;
-const FILTER_URL = "a06d53fda98cc45b68ee43b43e8fc0ca-138658565.eu-north-1.elb.amazonaws.com";
-const FORWARD_URL = "localhost:3002";
+const FORWARD_URL = "a06d53fda98cc45b68ee43b43e8fc0ca-138658565.eu-north-1.elb.amazonaws.com"
 
 // Create a proxy for endpoint /files
 const proxy_for_files = createProxyMiddleware({
