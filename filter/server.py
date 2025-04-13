@@ -30,7 +30,7 @@ def filter_docs():
         print("Error occurred:", str(e))
         return make_response('', 500)
 
-# Upload a document to DynamoDB
+# Upload a document to DynamoDB  
 # The newly created document object is returned
 @app.route('/files/', methods=['POST'])
 def post_document():

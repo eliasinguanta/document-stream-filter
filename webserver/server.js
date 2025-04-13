@@ -9,7 +9,7 @@ const app = express();
 const PORT = 3000;
 const FORWARD_URL = "a06d53fda98cc45b68ee43b43e8fc0ca-138658565.eu-north-1.elb.amazonaws.com"
 
-// Create a proxy for endpoint /files
+// Create a proxy for endpoint /files  
 const proxy_for_files = createProxyMiddleware({
   target: `http://${FORWARD_URL}`,
   changeOrigin: true,
