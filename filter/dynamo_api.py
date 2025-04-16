@@ -13,9 +13,10 @@ import asyncio
 from botocore.exceptions import BotoCoreError, ClientError
 from boto3.dynamodb.conditions import Key
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lower, explode
+from pyspark.sql.functions import col, lower, explode, levenshtein, udf, lit, length
 from pydantic import BaseModel
 import logging
+from pyspark.sql.types import IntegerType
 
 app_name = "document-stream-filter"
 logger = logging.getLogger(app_name)
@@ -30,11 +31,6 @@ logger.addHandler(console_handler)
 dynamodb = boto3.client('dynamodb')
 DOCUMENT_TABLE = 'dsf-metadata-db'  # Ersetze mit dem tatsächlichen Tabellennamen
 MAX_BATCH_SIZE = 25
-
-# Initialize Spark session
-spark = SparkSession.builder \
-    .appName(app_name) \
-    .getOrCreate()
 
 deserializer = TypeDeserializer()
 
@@ -180,6 +176,18 @@ def post_random_documents_to_dynamoDB(count=200):
         print("Error uploading documents:", e)
         return e
 
+# Initialize Spark session
+spark = SparkSession.builder \
+    .appName(app_name) \
+    .getOrCreate()
+
+@udf(returnType=IntegerType())
+def hamming_distance(a, b):
+    dist = 0
+    for i in range(len(a)):
+        if a[i] != b[i]:
+            dist += 1
+    return dist
 
 def filter_documents(queries):
     try:
@@ -200,8 +208,18 @@ def filter_documents(queries):
 
         for query in queries:
             logger.debug(f"Processing query: {query.word}")
-
-            filtered = docs_df.filter(col("words") == query.word.lower())
+            
+            if query.metric.lower() == "exact":
+                filtered = docs_df.filter(col("words") == query.word.lower())
+            elif query.metric.lower() == "edit":
+                filtered = docs_df.filter(levenshtein(col("words"), lit(query.word.lower())) <= lit(query.distance))
+            elif query.metric.lower() == "hamming":
+                filtered = docs_df \
+                    .filter(length(col("words")) == len(query.word)) \
+                    .filter(hamming_distance(col("words"), lit(query.word.lower())) <= lit(query.distance))
+            else:
+                raise ValueError(f"Invalid metric: {query.metric}")
+                    
             logger.debug("Filtered rows:")
 
             filtered_documents = filtered.groupBy("documentName", "size", "mimeType", "uploadDate") \
