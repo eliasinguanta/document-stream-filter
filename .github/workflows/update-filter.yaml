@@ -3,7 +3,7 @@ name: CI/CD for dsf-filter (AWS ECR & K8s Rollout)
 on:
   push:
     branches:
-      - spark-doc-api
+      - main
     paths:
       - 'filter/**'
 
