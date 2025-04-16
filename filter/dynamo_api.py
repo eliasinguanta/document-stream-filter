@@ -15,6 +15,15 @@ from boto3.dynamodb.conditions import Key
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lower, explode
 from pydantic import BaseModel
+import logging
+
+app_name = "document-stream-filter"
+logger = logging.getLogger(app_name)
+logger.setLevel(logging.DEBUG)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s'))
+logger.addHandler(console_handler)
 
 
 # DynamoDB Client
@@ -24,7 +33,7 @@ MAX_BATCH_SIZE = 25
 
 # Initialize Spark session
 spark = SparkSession.builder \
-    .appName("document-stream-filter") \
+    .appName(app_name) \
     .getOrCreate()
 
 deserializer = TypeDeserializer()
@@ -170,29 +179,38 @@ def post_random_documents_to_dynamoDB(count=200):
     except (BotoCoreError, ClientError, Exception) as e:
         print("Error uploading documents:", e)
         return e
-    
+
+
 def filter_documents(queries):
     try:
-
-        # Get all documents from DynamoDB
+        logger.debug("Fetching documents from DynamoDB...")
         documents = get_documents_from_dynamoDB()
+        logger.debug(f"Fetched {len(documents)} documents.")
 
-        # Create a Spark DataFrame from the documents
+        logger.debug("Creating Spark DataFrame...")
         docs_df = spark.createDataFrame(documents)
+        logger.debug("DataFrame schema:")
+        docs_df.printSchema()
 
-        # Split the words into separate rows and convert to lowercase
+        logger.debug("Exploding and lowering words column...")
         docs_df = docs_df.withColumn("words", explode(col("words"))) \
                          .withColumn("words", lower(col("words")))
 
         results = []
 
         for query in queries:
-            
-            # Actual filtering
+            logger.debug(f"Processing query: {query.word}")
+
             filtered = docs_df.filter(col("words") == query.word.lower())
-            
-            
-            filtered_documents = filtered.groupBy("documentName", "size", "mimeType", "uploadDate").collect()
+            logger.debug("Filtered rows:")
+
+            filtered_documents = filtered.groupBy("documentName", "size", "mimeType", "uploadDate") \
+                .count() \
+                .drop("count") \
+                .collect()
+           
+            logger.debug(f"Found {len(filtered_documents)} results for query: {query.word}")
+
             results.append({
                 "query": query.dict(),
                 "results": [row.asDict() for row in filtered_documents]
@@ -200,6 +218,7 @@ def filter_documents(queries):
 
         return results
 
-    except (BotoCoreError, ClientError, Exception) as e:
-        print("Error occurred:", str(e))
+    except Exception as e:
+        logger.error("An error occurred: %s", str(e))
         raise e
+
