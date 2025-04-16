@@ -1,5 +1,4 @@
 import path from "path";
-import multer from "multer";
 
 // transform the input stream to string
 export const streamToString = (stream) => {
@@ -20,15 +19,3 @@ export const getContentType = (file) => {
     ".js": "application/javascript",
   }[extname] || "application/octet-stream";
 };
-
-
-// Middleware to write the file from http body to req.file
-export function transfromInput(req, res, next) {
-  multer().single("file")(req, res, (err) => {
-    if (err) {
-      console.error("Error uploading file:", err);
-      return res.sendStatus(500);
-    }
-    next();
-  });
-}

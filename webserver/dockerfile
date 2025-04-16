@@ -32,6 +32,7 @@ RUN npm install @aws-sdk/client-dynamodb
 RUN npm install @aws-sdk/util-dynamodb
 RUN npm install bootstrap@5.3.4
 RUN npm install node-fetch
+RUN npm install http-proxy-middleware
 
 
 # Kopiere den Rest des Codes
