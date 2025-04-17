@@ -1,39 +1,30 @@
-# Document Stream Filter
-This is my **Document Stream Filter** web application. The project serves as a practice to familiarize myself with **AWS Cloud**. Here, I experiment with various AWS services and enhance my knowledge of cloud technologies.
-The project is deployed on an **AWS EC2 instance** and is public accessible via http://13.48.58.86
+# Document Filter
+This is my really simple **Document Filter** web application. The project serves as a practice to familiarize myself with **AWS Cloud**. Here, I experiment with various AWS services and enhance my knowledge of cloud technologies.
+The project is deployed on an **AWS** and is public accessible via http://dsf-440288641.eu-north-1.elb.amazonaws.com
 
 ## Project Goals
 - Utilize and gain hands-on experience with **AWS S3, EC2, ELB, ECS or EKS, DynamoDB, Docker and CI/CD with GitHub Actions**
 
+## Used Technologies
 
-## Currently Used Technologies
-- **Frontend:** Vite
-- **Backend:** AWS EC2 (Node.js server)
-- **Storage:** AWS S3 (stores the website)
-- **Deployment:** EC2 hosting with CI/CD via GitHub Actions
+- **Frontend:**  
+  Developed using **Vite**, a frontend build tool for **Vue**, styled with **Bootstrap**.
 
-## Installation & Usage
+- **Backend:**  
+  - The main web server runs in an **Auto Scaling Group** manually created in **public subnets**, using **EC2 instances** behind an **Application Load Balancer (ALB)**.  
+  - A second containerized service is deployed on **Amazon EKS** (Elastic Kubernetes Service), using a **node group** within **private subnets**.  
+  - Both services are distributed across **two Availability Zones**.
 
-If you want to run the project locally, you can use the provided **Dockerfile**:
+- **Storage:**  
+  - **Amazon S3** hosts the website files.  
+  - **Amazon DynamoDB** is used to store queries and documents.
 
-1. Clone the repository:
-    ```sh
-    git clone https://github.com/your-username/document-stream-filter.git
-    cd document-stream-filter
-    ```
+- **Deployment:**  
+  - via **GitHub Actions**.
 
-2. Build and start the Docker container:
-    ```sh
-    docker build -t document-stream-filter .
-    docker run -p 3000:3000 document-stream-filter
-    ```
 
-This will run the app locally on port 3000, and you can access it at `http://localhost:3000`.
+![Cloud-Architektur](images/aws-reduced_architecture.jpg)
 
-## Future Plans
-- Connect **DynamoDB** for storing documents and queries
-- Add different document filter written in c++ in a **ECS or EKS**
-- Integrate a **ELB** and **auto-scaling** for http traffic
 
 ## License
 

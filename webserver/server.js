@@ -18,7 +18,7 @@ const proxy_for_files = createProxyMiddleware({
   }
 });
 
-// Middleware for GET and POST requests on /files
+// Middleware for GET and POST requests on /files  
 // Forward requests to the spark cluster that is our dynamoDB api
 app.use("/files", proxy_for_files);
 

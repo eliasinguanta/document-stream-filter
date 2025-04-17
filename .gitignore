@@ -5,3 +5,4 @@ update_container.sh
 venv/
 __pycache__/
 example.txt
+test.sh
