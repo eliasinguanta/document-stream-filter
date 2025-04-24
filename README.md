@@ -1,6 +1,6 @@
 # Document Filter
 This is my really simple **Document Filter** web application. The project serves as a practice to familiarize myself with **AWS Cloud**. Here, I experiment with various AWS services and enhance my knowledge of cloud technologies.
-The project is deployed on an **AWS** and is public accessible via http://dsf-440288641.eu-north-1.elb.amazonaws.com
+The project is deployed on an **AWS** and is public accessible via http://dsf-440288641.eu-north-1.elb.amazonaws.com between 7:00 am and 8:00 pm (German time). 
 
 ## Project Goals
 - Utilize and gain hands-on experience with **AWS S3, EC2, ELB, ECS or EKS, DynamoDB, Docker and CI/CD with GitHub Actions**
