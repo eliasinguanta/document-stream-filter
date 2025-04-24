@@ -1,5 +1,4 @@
 # file_handler.py
-import json
 import boto3
 import re
 from datetime import datetime
@@ -9,12 +8,9 @@ import random
 import string
 import time
 
-import asyncio
 from botocore.exceptions import BotoCoreError, ClientError
-from boto3.dynamodb.conditions import Key
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lower, explode, levenshtein, udf, lit, length
-from pydantic import BaseModel
 import logging
 from pyspark.sql.types import IntegerType
 
@@ -38,6 +34,19 @@ deserializer = TypeDeserializer()
 def dynamodb_item_to_dict(item):
     return {k: deserializer.deserialize(v) for k, v in item.items()}
 
+# returns the number of documents that are currently stored in the document table 
+def count_documents_in_dynamoDB():
+    try:
+        response = dynamodb.scan(
+            TableName=DOCUMENT_TABLE,
+            Select='COUNT'
+        )
+        return response['Count']
+    except (BotoCoreError, ClientError, Exception) as e:
+        print("Error counting documents in DynamoDB:", e)
+        raise e
+
+
 # The words of the document are stored in a list and the list is uploaded to DynamoDB with metadata
 # Returns the new file with its metadata
 def post_document_to_dynamoDB(file):
@@ -45,6 +54,10 @@ def post_document_to_dynamoDB(file):
         raise ValueError("No file uploaded")
 
     try:
+        # We allow the post method only if less then 1000 documents are stored
+        if count_documents_in_dynamoDB() >= 1000:
+            return []
+
         # transform the file content into a list of words
         file_content = file.read().decode('utf-8')
         words = re.findall(r'\b\w+\b', file_content)
@@ -140,7 +153,7 @@ def generate_random_document(index):
     ]
 
     # Create a document name and file content
-    document_name = f"random-doc-debug-{index}-{int(time.time() * 1000)}.txt"
+    document_name = f"random-{index}-{int(time.time())}.txt"
     file_content = ' '.join(random_words)
 
     # Create the dynamoDB object
@@ -159,6 +172,9 @@ def generate_random_document(index):
 # This function is used for testing purposes
 def post_random_documents_to_dynamoDB(count=200):
     try:
+        # We allow the post method only if less then 1000 documents are stored
+        if count_documents_in_dynamoDB() >= 1000:
+            return []
         
         # Generate a list of random documents
         documents = [generate_random_document(i) for i in range(count)]
