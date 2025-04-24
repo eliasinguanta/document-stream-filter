@@ -23,7 +23,7 @@ The project is deployed on an **AWS** and is public accessible via http://dsf-44
   - via **GitHub Actions**.
 
 
-![Cloud-Architektur](images/aws-reduced_architecture.jpg)
+![Cloud-Architektur](images/aws-reduced_architecture.png)
 
 
 ## License

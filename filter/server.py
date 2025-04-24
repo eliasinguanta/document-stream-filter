@@ -1,6 +1,4 @@
 from flask import Flask, request, jsonify, make_response
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lower, explode
 from pydantic import BaseModel
 from typing import List
 from botocore.exceptions import BotoCoreError, ClientError

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <h1 class="text-center mb-4">Document Stream Filter</h1>
+    <h1 class="text-center mb-4">Document Filter</h1>
     <div class="row justify-content-center">
       <div class="col-md-5">
         <UploadDocument />
