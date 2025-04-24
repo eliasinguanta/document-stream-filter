@@ -54,6 +54,7 @@ def post_document_to_dynamoDB(file):
         raise ValueError("No file uploaded")
 
     try:
+        # We allow the post method only if less then 1000 documents are stored
         if count_documents_in_dynamoDB() >= 1000:
             return []
 
@@ -171,7 +172,7 @@ def generate_random_document(index):
 # This function is used for testing purposes
 def post_random_documents_to_dynamoDB(count=200):
     try:
-        
+        # We allow the post method only if less then 1000 documents are stored
         if count_documents_in_dynamoDB() >= 1000:
             return []
         
