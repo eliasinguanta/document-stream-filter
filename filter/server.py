@@ -1,35 +1,18 @@
 from flask import Flask, request, jsonify, make_response
-from pydantic import BaseModel
-from typing import List
+
 from botocore.exceptions import BotoCoreError, ClientError
 from dynamo_api import post_document_to_dynamoDB, get_documents_from_dynamoDB, delete_document_from_dynamoDB, delete_all_documents_from_dynamoDB, get_document_from_dynamoDB, post_random_documents_to_dynamoDB, filter_documents
 from dynamo_api import logger
+from utils import Query, FilterRequest
 
 app = Flask(__name__)
-
-class Query(BaseModel):
-    queryId: int
-    word: str
-    metric: str
-    distance: int
-
-class FilterRequest(BaseModel):
-    queries: List[Query]
 
 @app.route("/filter", methods=["POST"])
 def filter_docs():
     try:
-        logger.debug("Received request to filter documents")
-        
         data = request.get_json()
-        logger.debug("Request data: %s", data)
-
         filter_request = FilterRequest(**data)
-        logger.debug("Parsed filter request: %s", filter_request)
-
         filtered_documents = filter_documents(filter_request.queries)
-        logger.debug("Filtered documents successfully")
-
         return jsonify(filtered_documents)
 
     except (BotoCoreError, ClientError, Exception) as e:

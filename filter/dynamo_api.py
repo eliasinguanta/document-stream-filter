@@ -9,11 +9,9 @@ import string
 import time
 
 from botocore.exceptions import BotoCoreError, ClientError
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lower, explode, levenshtein, udf, lit, length
 import logging
-from pyspark.sql.types import IntegerType
-
+import Levenshtein
+from utils import Query, Document, Match
 app_name = "document-stream-filter"
 logger = logging.getLogger(app_name)
 logger.setLevel(logging.DEBUG)
@@ -82,13 +80,13 @@ def post_document_to_dynamoDB(file):
     
 # Get all documents from DynamoDB
 # Returns a list of dictionaries with the metadata and words of the documents
-def get_documents_from_dynamoDB():
+def get_documents_from_dynamoDB() -> list[Document]:
     try:
         # get request
         response = dynamodb.scan( TableName=DOCUMENT_TABLE )
         
         # transform the response into a list of dictionaries
-        documents = [ dynamodb_item_to_dict(document) for document in response.get('Items', [])]
+        documents = [Document(**dynamodb_item_to_dict(document)) for document in response.get('Items', [])]
         return documents
 
     except (BotoCoreError, ClientError, Exception) as e:
@@ -192,67 +190,41 @@ def post_random_documents_to_dynamoDB(count=200):
         print("Error uploading documents:", e)
         return e
 
-# Initialize Spark session
-spark = SparkSession.builder \
-    .appName(app_name) \
-    .getOrCreate()
+def hamming_distance(s1, s2):
+    return sum(c1 != c2 for c1, c2 in zip(s1, s2))
 
-@udf(returnType=IntegerType())
-def hamming_distance(a, b):
-    dist = 0
-    for i in range(len(a)):
-        if a[i] != b[i]:
-            dist += 1
-    return dist
+def filter_documents(queries: list[Query]) -> list[dict]:
+    documents: list[Document] = get_documents_from_dynamoDB()
+    results: list[Match] = []
+    for query in queries:
+        query_word = query.word.lower()
+        metric = query.metric.lower()
+        matching_docs: list[Document] = []
 
-def filter_documents(queries):
-    try:
-        logger.debug("Fetching documents from DynamoDB...")
-        documents = get_documents_from_dynamoDB()
-        logger.debug(f"Fetched {len(documents)} documents.")
+        for doc in documents:
+            for word in doc.words:
+                word = word.lower()
 
-        logger.debug("Creating Spark DataFrame...")
-        docs_df = spark.createDataFrame(documents)
-        logger.debug("DataFrame schema:")
-        docs_df.printSchema()
+                if metric == "exact":
+                    if word == query_word:
+                        matching_docs.append(doc)
+                        break
 
-        logger.debug("Exploding and lowering words column...")
-        docs_df = docs_df.withColumn("words", explode(col("words"))) \
-                         .withColumn("words", lower(col("words")))
+                elif metric == "edit":
+                    if Levenshtein.distance(word, query_word) <= query.distance:
+                        matching_docs.append(doc)
+                        break
 
-        results = []
+                elif metric == "hamming":
+                    if len(word) == len(query_word) and hamming_distance(word, query_word) <= query.distance:
+                        matching_docs.append(doc)
+                        break
 
-        for query in queries:
-            logger.debug(f"Processing query: {query.word}")
-            
-            if query.metric.lower() == "exact":
-                filtered = docs_df.filter(col("words") == query.word.lower())
-            elif query.metric.lower() == "edit":
-                filtered = docs_df.filter(levenshtein(col("words"), lit(query.word.lower())) <= lit(query.distance))
-            elif query.metric.lower() == "hamming":
-                filtered = docs_df \
-                    .filter(length(col("words")) == len(query.word)) \
-                    .filter(hamming_distance(col("words"), lit(query.word.lower())) <= lit(query.distance))
-            else:
-                raise ValueError(f"Invalid metric: {query.metric}")
-                    
-            logger.debug("Filtered rows:")
+                else:
+                    raise ValueError(f"Invalid metric: {query.metric}")
 
-            filtered_documents = filtered.groupBy("documentName", "size", "mimeType", "uploadDate") \
-                .count() \
-                .drop("count") \
-                .collect()
-           
-            logger.debug(f"Found {len(filtered_documents)} results for query: {query.word}")
 
-            results.append({
-                "query": query.dict(),
-                "results": [row.asDict() for row in filtered_documents]
-            })
+        results.append(Match(query=query, results=matching_docs))
+    return [res.dict() for res in results]
 
-        return results
-
-    except Exception as e:
-        logger.error("An error occurred: %s", str(e))
-        raise e
 
