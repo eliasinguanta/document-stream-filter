@@ -7,7 +7,7 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import {postQueries, getQueries, deleteQueries } from "./backend/dynamoDB_api.js";
 const app = express();
 const PORT = 3000;
-const FORWARD_URL = "a06d53fda98cc45b68ee43b43e8fc0ca-138658565.eu-north-1.elb.amazonaws.com"
+const FORWARD_URL = "filter:3002"//"a06d53fda98cc45b68ee43b43e8fc0ca-138658565.eu-north-1.elb.amazonaws.com" //TODO: change for production
 
 // Create a proxy for endpoint /files  
 const proxy_for_files = createProxyMiddleware({

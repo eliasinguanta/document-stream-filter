@@ -84,13 +84,16 @@ def get_documents_from_dynamoDB() -> list[Document]:
     try:
         # get request
         response = dynamodb.scan( TableName=DOCUMENT_TABLE )
-        
+        logger.debug("Received response from DynamoDB")
+
         # transform the response into a list of dictionaries
         documents = [Document(**dynamodb_item_to_dict(document)) for document in response.get('Items', [])]
+        logger.debug("transform the response into a list of dictionaries")
+
         return documents
 
     except (BotoCoreError, ClientError, Exception) as e:
-        print("Error reading file from DynamoDB:", e)
+        logger.debug(f'Error reading file from DynamoDB: {e}')
         raise e 
 
 # Delete a document from DynamoDB
@@ -225,6 +228,6 @@ def filter_documents(queries: list[Query]) -> list[dict]:
 
 
         results.append(Match(query=query, results=matching_docs))
-    return [res.dict() for res in results]
+    return [res.model_dump() for res in results]
 
 
