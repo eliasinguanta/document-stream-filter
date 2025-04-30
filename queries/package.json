@@ -1,0 +1,26 @@
+{
+  "name": "queries",
+  "version": "1.0.0",
+  "description": "handles the queriy storage",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eliasinguanta/document-stream-filter.git"
+  },
+  "author": "Elias Inguanta",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eliasinguanta/document-stream-filter/issues"
+  },
+  "homepage": "https://github.com/eliasinguanta/document-stream-filter#readme",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.799.0",
+    "@aws-sdk/util-dynamodb": "^3.799.0",
+    "express": "^5.1.0"
+  }
+}
