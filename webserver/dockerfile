@@ -1,52 +1,35 @@
-# Offizielles Node.js-Image als Basis
 FROM node:18
 
-
-# Installiere curl und unzip (für die Installation von AWS CLI v2)
+# Install dependencies for AWS CLI v2 installation
 RUN apt-get update && apt-get install -y \
     curl \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Lade AWS CLI v2 herunter und installiere es
+# Install AWS CLI v2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
     && ./aws/install \
     && rm -rf awscliv2.zip aws/
 
-# set aws config
+# Set AWS access
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
-
 ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
 ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-
 ENV AWS_REGION=eu-north-1
 
-# Setze das Arbeitsverzeichnis
 WORKDIR /app
 
-# Kopiere die Package-Dateien und installiere nur Produktionsabhängigkeiten
-COPY package.json package-lock.json ./
-RUN npm install --omit=dev
-RUN npm install vite
-RUN npm install @aws-sdk/client-s3
-RUN npm install multer
-RUN npm install @aws-sdk/client-dynamodb
-RUN npm install @aws-sdk/util-dynamodb
-RUN npm install bootstrap@5.3.4
-RUN npm install node-fetch
-RUN npm install http-proxy-middleware
-
-
-# Kopiere den Rest des Codes
+# Install dependencies for the webapp
 COPY . .
+RUN npm install
 
-# Baue die Vite-App
+# Build webapp
 RUN npm run build
 
-# Exponiere den Port für den Express-Server
+# Open port 3000 for the webserver
 EXPOSE 3000
 
-# Startbefehl für den Container
+# start the webserver
 CMD ["npm","run","start"]
