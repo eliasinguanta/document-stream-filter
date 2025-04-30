@@ -1,0 +1,13 @@
+replicaCount: 2
+image:
+  repository: 386757133985.dkr.ecr.eu-north-1.amazonaws.com/dsf-documents
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 80
+ingress:
+  enabled: true
+  path: /
+  hosts:
+    - "https://1C433F4C38EEFD411E336B5F184F1E34.gr7.eu-north-1.eks.amazonaws.com"
