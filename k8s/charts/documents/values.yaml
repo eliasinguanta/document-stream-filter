@@ -4,10 +4,25 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 service:
+  name: dsf-documents # Name des Services, der den Health-Pfad bedient
   type: ClusterIP
   port: 80
 ingress:
   enabled: true
-  path: /
   hosts:
-    - "https://1C433F4C38EEFD411E336B5F184F1E34.gr7.eu-north-1.eks.amazonaws.com"
+    - host: "a03293023ec1e41449be60ee718186ee-843957780.eu-north-1.elb.amazonaws.com"
+      paths:
+        - path: /health
+          pathType: Prefix
+          backend:
+            service:
+              name: dsf-documents # Name des Services, der den Health-Pfad bedient
+              port:
+                number: 80
+serviceAccount:
+  create: false
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
