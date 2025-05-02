@@ -4,12 +4,13 @@ from email.utils import parsedate_to_datetime
 from filter import filter_documents, logger
 from utils import Query, Document
 
-DOCUMENT_SERVICE_URL = "http://localhost:3004/files"
-QUERIY_SERVICE_URL = "http://localhost:3003/queries"
+DOCUMENT_SERVICE_URL = "http://dsf-documents/documents"
+QUERIY_SERVICE_URL = "http://dsf-queries/queries"
+PREAFIX = "/filter"
 
 app = Flask(__name__)
 
-@app.route("/filter", methods=["GET"])
+@app.route(f"{PREAFIX}", methods=["GET"])
 def filter_docs():
     try:
         logger.debug("Received request to filter documents")
@@ -38,11 +39,11 @@ def filter_docs():
 
 # Health check endpoint
 # Dummy function
-@app.route("/health", methods=["GET"])
+@app.route(f"{PREAFIX}/health", methods=["GET"])
 def health_check():
     logger.debug("Received health check request")
     return jsonify({"status": "ok"})
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=3002)
+    app.run(debug=True, host="0.0.0.0", port=80)
