@@ -2,21 +2,23 @@ replicaCount: 2
 image:
   repository: 386757133985.dkr.ecr.eu-north-1.amazonaws.com/dsf-documents
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 service:
-  name: dsf-documents # Name des Services, der den Health-Pfad bedient
+  name: dsf-documents
   type: ClusterIP
   port: 80
 ingress:
   enabled: true
+  className: nginx
+  annotations: {}
   hosts:
-    - host: "a03293023ec1e41449be60ee718186ee-843957780.eu-north-1.elb.amazonaws.com"
+    - host: a98f16d1b90d54374a72e6a7a00b9494-582298901.eu-north-1.elb.amazonaws.com
       paths:
-        - path: /health
+        - path: /documents
           pathType: Prefix
           backend:
             service:
-              name: dsf-documents # Name des Services, der den Health-Pfad bedient
+              name: dsf-documents
               port:
                 number: 80
 serviceAccount:

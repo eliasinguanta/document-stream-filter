@@ -25,8 +25,8 @@ WORKDIR /app
 COPY . .
 RUN npm install
 
-# Open port 3003 for the webserver
-EXPOSE 3003
+# Open port 80 for the webserver
+EXPOSE 80
 
 # start the webserver
 CMD ["npm","run","start"]

@@ -6,9 +6,11 @@ from dynamo import logger
 
 app = Flask(__name__)
 
+PREAFIX = "/documents"
+
 # Upload a document to DynamoDB
 # The newly created document object is returned
-@app.route('/files', methods=['POST'])
+@app.route(f'{PREAFIX}', methods=['POST'])
 def post_document():
     logger.debug("Received request to upload a file")
     if 'file' not in request.files:
@@ -29,7 +31,7 @@ def post_document():
 
 # Get all documents from DynamoDB
 # Returns a list of dictionaries with the metadata and words of the documents
-@app.route('/files', methods=['GET'])
+@app.route(f'{PREAFIX}', methods=['GET'])
 def get_documents():
     logger.debug("Received request to get files documents")
     try:
@@ -41,7 +43,7 @@ def get_documents():
 
 # Delete a document from DynamoDB
 # The document is deleted by its name
-@app.route('/files/<filename>', methods=['DELETE'])
+@app.route(f'{PREAFIX}/<filename>', methods=['DELETE'])
 def delete_document(filename):
     logger.debug("Received request to delete a file documents")
     if not filename:
@@ -59,7 +61,7 @@ def delete_document(filename):
 
 # Delete all documents from DynamoDB
 # Only status code is returned
-@app.route('/files', methods=['DELETE'])
+@app.route(f'{PREAFIX}', methods=['DELETE'])
 def delete_all_document():
     logger.debug("Received request to delete all documents")
     try:
@@ -72,7 +74,7 @@ def delete_all_document():
         return make_response('', 500)
 
 # Get a single document from DynamoDB
-@app.route('/files/<filename>', methods=['GET'])
+@app.route(f'{PREAFIX}/<filename>', methods=['GET'])
 def get_document(filename):
     logger.debug("Received request to get a file from documents")
     if not filename:
@@ -96,7 +98,7 @@ def get_document(filename):
 # Uplload multiple random generated documents to DynamoDB
 # The documents are generated on server-side
 # The newly created document objects are returned
-@app.route("/randomFiles", methods=["POST"])
+@app.route(f'{PREAFIX}/random', methods=["POST"])
 def post_random_documents():
     logger.debug("Received request to upload random files")
     try:
@@ -110,7 +112,7 @@ def post_random_documents():
 
 # Health check endpoint
 # Dummy function
-@app.route("/health", methods=["GET"])
+@app.route(f'{PREAFIX}/health', methods=["GET"])
 def health_check():
     logger.debug("Received health check request")
     return jsonify({"status": "ok"})

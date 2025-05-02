@@ -6,7 +6,7 @@ venv/
 __pycache__/
 example.txt
 test.sh
-
+setup.sh
 .terraform/
 terraform.tfstate
 terraform.tfstate.backup
