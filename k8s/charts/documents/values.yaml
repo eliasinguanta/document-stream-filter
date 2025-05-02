@@ -12,7 +12,7 @@ ingress:
   className: nginx
   annotations: {}
   hosts:
-    - host: a98f16d1b90d54374a72e6a7a00b9494-582298901.eu-north-1.elb.amazonaws.com
+    - host: REPLACE_HOST
       paths:
         - path: /documents
           pathType: Prefix

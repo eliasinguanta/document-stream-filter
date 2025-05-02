@@ -1,10 +1,10 @@
 replicaCount: 2
 image:
-  repository: 386757133985.dkr.ecr.eu-north-1.amazonaws.com/dsf-filter
+  repository: 386757133985.dkr.ecr.eu-north-1.amazonaws.com/dsf-website
   tag: latest
   pullPolicy: Always
 service:
-  name: dsf-filter
+  name: dsf-website
   type: ClusterIP
   port: 80
 ingress:
@@ -14,11 +14,11 @@ ingress:
   hosts:
     - host: REPLACE_HOST
       paths:
-        - path: /filter
+        - path: /website
           pathType: Prefix
           backend:
             service:
-              name: dsf-filter
+              name: dsf-website
               port:
                 number: 80
 serviceAccount:
