@@ -81,7 +81,7 @@ const setUploadDocument = (event) => {
 // This function is called when the upload random documents button is clicked
 const uploadRandomDocuments = async () => {
   try {
-    const response = await fetch("/randomFiles", {
+    const response = await fetch("/documents/random", {
       method: "POST",
     });
 
@@ -121,7 +121,7 @@ const uploadDocument = async () => {
   formData.append("file", selectedFile.value);
 
   try {
-    const response = await fetch("/files", {
+    const response = await fetch("/documents", {
       method: "POST",
       body: formData,
     });
@@ -149,7 +149,7 @@ const uploadDocument = async () => {
 // This function is called when the component is mounted
 const fetchFiles = async () => {
   try {
-    const response = await fetch("/files");
+    const response = await fetch("/documents");
     const data = await response.json();
     uploadedDocuments.value = data.map((file) => ({
       name: file.documentName,
@@ -165,7 +165,7 @@ const fetchFiles = async () => {
 // The document is identified by its name
 const deleteFile = async (filename) => {
   try {
-    const response = await fetch(`/files/${filename}`, {
+    const response = await fetch(`/documents/${filename}`, {
       method: "DELETE",
     });
 
@@ -188,7 +188,7 @@ const deleteAllFiles = async () => {
   try {
     if (!confirm('Are you sure you want to delete all documents?')) return;
 
-    const response = await fetch("/files", {
+    const response = await fetch("/documents", {
       method: "DELETE",
     });
 
@@ -203,7 +203,7 @@ const deleteAllFiles = async () => {
 // This function is called when the download button next to a document is clicked
 // The document is identified by its name
 const downloadFile = (filename) => {
-  window.location.href = `/files/${filename}`;
+  window.location.href = `/documents/${filename}`;
 };
 
 onMounted(() => {

@@ -1,9 +1,27 @@
-
+import path from "path";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { streamToString, getContentType } from "./utils.js";
+import { url } from "inspector";
 
 const myS3Client = new S3Client({});
 const BUCKET_NAME = "document-stream-filter-bucket";
+
+const streamToString = (stream) => {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on("data", (chunk) => chunks.push(chunk));
+    stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
+    stream.on("error", reject);
+  });
+};
+
+const getContentType = (file) => {
+  const extname = path.extname(file).toLowerCase();
+  return {
+    ".html": "text/html",
+    ".css": "text/css",
+    ".js": "application/javascript",
+  }[extname] || "application/octet-stream";
+};
 
 //downloads the web site files like html, css, js for vue from a aws s3 bucket
 export async function getWebsiteFromS3(req, res) {
@@ -24,6 +42,10 @@ export async function getWebsiteFromS3(req, res) {
 
   } catch (error) { //server error
     console.error("website not found: ", error);
-    res.sendStatus(500);
+    res.status(500).json({
+      req: req.url,
+      filePath: filePath,
+      error: error.message
+  });
   }
 }
