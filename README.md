@@ -1,9 +1,9 @@
 # Document Filter
 This is my really simple **Document Filter** web application. The project serves as a practice to familiarize myself with **AWS Cloud**. Here, I experiment with various AWS services and enhance my knowledge of cloud technologies.
-The project is deployed on **AWS** and is public accessible via http://dsf-440288641.eu-north-1.elb.amazonaws.com between 7:00 am and 8:00 pm (German time) Monday to Friday.
+The project is deployed on **AWS** and is public accessible via http://dsf-440288641.eu-north-1.elb.amazonaws.com between 7:00 am and 8:00 pm (German time) Monday to Friday. 
 
 ## Project Goals
-- Utilize and gain hands-on experience with **AWS S3, EC2, ELB, ECS or EKS, DynamoDB, Docker and CI/CD with GitHub Actions**
+- Utilize and gain hands-on experience with **AWS (S3, EC2, ELB, ECS or EKS, DynamoDB), Docker, CI/CD with GitHub Actions, terraform and helm**
 
 ## Used Technologies
 
@@ -11,9 +11,11 @@ The project is deployed on **AWS** and is public accessible via http://dsf-44028
   Developed using **Vite**, a frontend build tool for **Vue**, styled with **Bootstrap**.
 
 - **Backend:**  
-  - The main web server runs in an **Auto Scaling Group** manually created in **public subnets**, using **EC2 instances** behind an **Application Load Balancer (ALB)**.  
-  - A second containerized service is deployed on **Amazon EKS** (Elastic Kubernetes Service), using a **node group** within **private subnets**.  
-  - Both services are distributed across **two Availability Zones**.
+  - All backend services are deployed on **Amazon EKS**.  
+  - The infrastructure is provisioned using **Terraform**, and deployments are managed via **Helm**.  
+  - The EKS cluster runs in **public subnets** to avoid the additional cost of **NAT Gateways**, and is exposed through an **Application Load Balancer (ALB)**.
+  - Services are distributed across **two Availability Zones** to ensure high availability.
+
 
 - **Storage:**  
   - **Amazon S3** hosts the website files.  
@@ -23,7 +25,7 @@ The project is deployed on **AWS** and is public accessible via http://dsf-44028
   - via **GitHub Actions**.
 
 
-![Cloud-Architektur](images/aws-reduced_architecture.png)
+![Cloud-Architektur](Cloud_architecture.png)
 
 
 ## License
