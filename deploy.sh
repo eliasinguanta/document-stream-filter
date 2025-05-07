@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script builds the infrastructure and deploys the application to an EKS cluster.
 # The Container are loaded from ecr they are not build in this script.
-
+terraform init
 terraform -chdir=terraform apply -auto-approve
 aws eks update-kubeconfig --region eu-north-1 --name document-filter-cluster
 
