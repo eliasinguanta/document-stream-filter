@@ -1,0 +1,21 @@
+{
+  "name": "document-stream-filter",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build && aws s3 sync dist s3://document-stream-filter-bucket --delete"
+  },
+
+  "keywords": [],
+  "author": "Elias Inguanta",
+  "license": "MIT",
+  "homepage": "https://github.com/eliasinguanta/document-stream-filter#readme",
+  "dependencies": {
+    "@vitejs/plugin-vue": "^5.2.3",
+    "vite": "^6.3.4",
+    "vue": "^3.5.13"
+  }
+}

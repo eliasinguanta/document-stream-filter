@@ -1,8 +1,12 @@
 node_modules/
-.env
 dist/
 update_container.sh
 venv/
 __pycache__/
 example.txt
 test.sh
+setup.sh
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+.terraform.lock.hcl

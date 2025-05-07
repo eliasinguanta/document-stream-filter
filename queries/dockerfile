@@ -1,0 +1,32 @@
+FROM node:18-slim
+
+# Install dependencies for AWS CLI v2 installation
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install AWS CLI v2
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws/
+
+# Set AWS access
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+ENV AWS_REGION=eu-north-1
+
+WORKDIR /app
+
+# Install dependencies for the webapp
+COPY . .
+RUN npm install
+
+# Open port 80 for the webserver
+EXPOSE 80
+
+# start the webserver
+CMD ["npm","run","start"]

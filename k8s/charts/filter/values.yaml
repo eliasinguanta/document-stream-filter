@@ -1,0 +1,30 @@
+replicaCount: 2
+image:
+  repository: 386757133985.dkr.ecr.eu-north-1.amazonaws.com/dsf-filter
+  tag: latest
+  pullPolicy: Always
+service:
+  name: dsf-filter
+  type: ClusterIP
+  port: 80
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: REPLACE_HOST
+      paths:
+        - path: /filter
+          pathType: Prefix
+          backend:
+            service:
+              name: dsf-filter
+              port:
+                number: 80
+serviceAccount:
+  create: false
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
