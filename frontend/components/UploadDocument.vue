@@ -1,8 +1,8 @@
 <template>
-  <div class="container mt-5">
-
+  <div class="container mt-5 card">
+    <div class="card-body">
     <!-- Table displaying uploaded documents only if there are documents -->
-    <div v-if="uploadedDocuments.length > 0">
+    <div v-if="uploadedDocuments.length > 0" class = "card-text">
       <table class="table">
         <thead>
           <tr>
@@ -13,13 +13,15 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(doc, index) in paginatedDocuments" :key="index">
+          <tr v-for="(doc, index) in paginatedDocuments" :key="index" class="hover-row">
             <th scope="row">{{ (currentPage - 1) * pageSize + index + 1 }}</th>
             <td>{{ doc.name }}</td>
             <td>{{ doc.size }} bytes</td>
             <td>
-              <button class="btn btn-danger btn-sm" @click="deleteFile(doc.name)">Delete</button>
-              <button class="btn btn-success btn-sm ms-2" @click="downloadFile(doc.name)">Download</button>
+              <div class="action-buttons">
+                <button class="btn btn-danger btn-sm" @click="deleteFile(doc.name)">Delete</button>
+                <button class="btn btn-success btn-sm ms-2" @click="downloadFile(doc.name)">Download</button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -33,7 +35,7 @@
       </div>
     </div>
 
-    <div class="mt-4">
+    <div class="mt-4 card-text">
 
       <!-- File upload form -->
       <div class="mb-3">
@@ -49,7 +51,7 @@
         <button class="btn btn-danger" @click="deleteAllFiles">Delete All</button>
       </div>
     </div>
-
+  </div>
   </div>
 </template>
 <script setup>
@@ -210,3 +212,12 @@ onMounted(() => {
   fetchFiles();
 });
 </script>
+
+<style scoped>
+.hover-row td .action-buttons {
+  visibility: hidden;
+}
+.hover-row:hover td .action-buttons {
+  visibility: visible;
+}
+</style>

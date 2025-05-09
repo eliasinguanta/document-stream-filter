@@ -1,8 +1,8 @@
 <template>
-  <div class="container mt-5">
-
+  <div class="container mt-5 card">
+    <div class="card-body">
     <!-- Table of uploaded queries -->
-    <div v-if="queries.length > 0">
+    <div v-if="queries.length > 0" class="card-text">
       <table class="table mt-4">
         <thead>
           <tr>
@@ -14,15 +14,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(query, index) in paginatedQueries" :key="query.id">
+          <tr v-for="(query, index) in paginatedQueries" :key="query.id" class="hover-row">
             <td>{{ (queryPage - 1) * queryPageSize + index + 1 }}</td>
             <td>{{ query.word }}</td>
             <td>{{ query.metric }}</td>
             <td>{{ query.distance }}</td>
             <td>
+              <div class="action-buttons">
               <button type="button" class="btn btn-danger" @click="deleteQuery(query.queryId)">
                 Delete
               </button>
+            </div>
             </td>
           </tr>
         </tbody>
@@ -36,7 +38,7 @@
       </div>
     </div>
 
-    <div class="mt-4">
+    <div class="mt-4 card-text">
 
       <!-- Form to upload a new query -->
       <form @submit.prevent="submitQuery" class="p-4 bg-light rounded shadow-sm w-100">
@@ -57,7 +59,6 @@
             <select v-model="metric" id="metric" class="form-control" required>
               <option value="edit">Edit</option>
               <option value="hamming">Hamming</option>
-              <option value="exact">Exact</option>
             </select>
           </div>
         </div>
@@ -67,7 +68,7 @@
         </div>
       </form>
     </div>
-
+  </div>
   </div>
 </template>
 <script setup>
@@ -160,3 +161,12 @@ onMounted(() => {
   loadQueries()
 })
 </script>
+
+<style scoped>
+.hover-row td .action-buttons {
+  visibility: hidden;
+}
+.hover-row:hover td .action-buttons {
+  visibility: visible;
+}
+</style>
