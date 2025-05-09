@@ -14,15 +14,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(query, index) in paginatedQueries" :key="query.id">
+          <tr v-for="(query, index) in paginatedQueries" :key="query.id" class="hover-row">
             <td>{{ (queryPage - 1) * queryPageSize + index + 1 }}</td>
             <td>{{ query.word }}</td>
             <td>{{ query.metric }}</td>
             <td>{{ query.distance }}</td>
             <td>
+              <div class="action-buttons">
               <button type="button" class="btn btn-danger" @click="deleteQuery(query.queryId)">
                 Delete
               </button>
+            </div>
             </td>
           </tr>
         </tbody>
@@ -57,7 +59,6 @@
             <select v-model="metric" id="metric" class="form-control" required>
               <option value="edit">Edit</option>
               <option value="hamming">Hamming</option>
-              <option value="exact">Exact</option>
             </select>
           </div>
         </div>
@@ -160,3 +161,12 @@ onMounted(() => {
   loadQueries()
 })
 </script>
+
+<style scoped>
+.hover-row td .action-buttons {
+  visibility: hidden;
+}
+.hover-row:hover td .action-buttons {
+  visibility: visible;
+}
+</style>

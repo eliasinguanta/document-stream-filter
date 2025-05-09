@@ -34,12 +34,7 @@ def filter_documents(queries: list[Query], documents: list[Document]) -> list[di
             for word in doc.words:
                 word = word.lower()
 
-                if metric == "exact":
-                    if word == query_word:
-                        matching_docs.append(doc)
-                        break
-
-                elif metric == "edit":
+                if metric == "edit":
                     if Levenshtein.distance(word, query_word) <= query.distance:
                         matching_docs.append(doc)
                         break
