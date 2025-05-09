@@ -3,6 +3,7 @@ import re
 import time
 import string
 import logging
+import random
 from datetime import datetime
 from botocore.exceptions import BotoCoreError, ClientError
 from boto3.dynamodb.types import TypeDeserializer
@@ -107,20 +108,38 @@ def delete_document_from_dynamoDB(filename):
 # The function first gets all documents from DynamoDB and then deletes them in batches
 def delete_all_documents_from_dynamoDB():
     try:
-        # Get all items from the table
-        items = get_documents_from_dynamoDB()
+        # Get all documents
+        items: list[Document] = get_documents_from_dynamoDB()
+        
         if not items:
+            logger.debug("No documents to delete")
             return
 
-        # Delete items in batches of 25
+        logger.debug(f"delete {len(items)} documents")
+        
+        # delete in batches of 25
         for i in range(0, len(items), MAX_BATCH_SIZE):
             batch = items[i:i + MAX_BATCH_SIZE]
-            request_items = { DOCUMENT_TABLE: [{"DeleteRequest": { "Key": { "documentName": { "S": item["documentName"] }}}} for item in batch ]}
-            dynamodb.batch_write_item(RequestItems = request_items)
+            logger.debug(f"process Batch {i // MAX_BATCH_SIZE + 1} with {len(batch)} documents.")
+            
+            request_items = {
+                DOCUMENT_TABLE: [
+                    {"DeleteRequest": {"Key": {"documentName": {"S": item.documentName}}}} 
+                    for item in batch
+                ]
+            }
+            
+            logger.debug(f"send batch to dynamoDB: {request_items}")
+            
+            # Send batch-request
+            response = dynamodb.batch_write_item(RequestItems=request_items)
+            
+            logger.debug(f"response from dynamoDB for Batch {i // MAX_BATCH_SIZE + 1}: {response}")
 
     except (BotoCoreError, ClientError, Exception) as e:
-        print(" Error for deleting all documents", e)
+        logger.error(f"Error for deleting all documents: {e}")
         raise e
+
 
 # Get a document from DynamoDB
 def get_document_from_dynamoDB(filename):
@@ -167,26 +186,43 @@ def generate_random_document(index):
 # The documents are uploaded in batches of 25
 # The function returns the list of new documents
 # This function is used for testing purposes
+
 def post_random_documents_to_dynamoDB(count=200):
     try:
-        # We allow the post method only if less then 1000 documents are stored
+        # Check if the document count exceeds 1000
         if count_documents_in_dynamoDB() >= 1000:
+            logger.debug("Document count exceeds 1000, returning empty list.")
             return []
+
+        logger.debug(f"Generating {count} random documents.")
         
         # Generate a list of random documents
         documents = [generate_random_document(i) for i in range(count)]
-
+        logger.debug(f"Generated {len(documents)} documents.")
+        
         # Upload the documents in batches of 25
         for i in range(0, len(documents), MAX_BATCH_SIZE):
             batch = documents[i:i + MAX_BATCH_SIZE]
-            request_items = { DOCUMENT_TABLE: [{'PutRequest': {'Item': doc}} for doc in batch]}
-            dynamodb.batch_write_item(RequestItems=request_items)
+            logger.debug(f"Processing batch {i // MAX_BATCH_SIZE + 1} with {len(batch)} documents.")
+            
+            request_items = {
+                DOCUMENT_TABLE: [{'PutRequest': {'Item': doc}} for doc in batch]
+            }
+            
+            logger.debug(f"Sending batch to DynamoDB: {request_items}")
+            
+            # Upload the batch to DynamoDB
+            response = dynamodb.batch_write_item(RequestItems=request_items)
+            logger.debug(f"Response from DynamoDB for batch {i // MAX_BATCH_SIZE + 1}: {response}")
 
         # Transform the documents into a list of dictionaries and return them
-        return [dynamodb_item_to_dict(document) for document in documents]
+        transformed_documents = [dynamodb_item_to_dict(document) for document in documents]
+        logger.debug(f"Transformed {len(transformed_documents)} documents into dictionaries.")
+        
+        return transformed_documents
 
     except (BotoCoreError, ClientError, Exception) as e:
-        print("Error uploading documents:", e)
+        logger.error("Error uploading documents: %s", e)
         return e
 
 

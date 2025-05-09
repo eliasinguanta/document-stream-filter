@@ -1,8 +1,8 @@
 <template>
-  <div class="container mt-5">
-
+  <div class="container mt-5 card">
+    <div class="card-body">
     <!-- Table of uploaded queries -->
-    <div v-if="queries.length > 0">
+    <div v-if="queries.length > 0" class="card-text">
       <table class="table mt-4">
         <thead>
           <tr>
@@ -36,7 +36,7 @@
       </div>
     </div>
 
-    <div class="mt-4">
+    <div class="mt-4 card-text">
 
       <!-- Form to upload a new query -->
       <form @submit.prevent="submitQuery" class="p-4 bg-light rounded shadow-sm w-100">
@@ -67,7 +67,7 @@
         </div>
       </form>
     </div>
-
+  </div>
   </div>
 </template>
 <script setup>
