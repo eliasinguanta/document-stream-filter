@@ -6,7 +6,7 @@ const QUERY_TABLE = 'dsf-queries-db';
 
 
 // Every query has a unique id, which is the maximum id + 1
-// To upload a new query, we need to know the maximum id
+// To upload a new query we need to know the maximum id
 async function getMaxQueryId(){
   // Scan table for all queryIds
   const data = await client.send( new ScanCommand({ TableName: QUERY_TABLE, ProjectionExpression: "queryId" }));

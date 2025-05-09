@@ -158,7 +158,7 @@ def get_document_from_dynamoDB(filename):
         print("Error reading document from DynamoDB:", e)
         raise e
 
-# Generate a random document with random words
+# Generate a document with random words
 # The document is already in dynamoDB syntax returned
 def generate_random_document(index):
     
